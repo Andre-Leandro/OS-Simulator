@@ -49,17 +49,23 @@ func swapOut(i int) {
 }
 
 func (os *OS) addReady(l *[]Process) {
-    copy := *l
+	copy := *l
 
-	for index := range *l {
+	for index := range copy {
 		if len(os.queue) == 5 {
 			break
 		}
 
-		if copy[index].arrivalTime < os.time {
+		if copy[index].arrivalTime < os.time { // menor o igual tambien 
 			os.queue = append(os.queue, copy[index])
-            *l = append((*l)[index:])
-            fmt.Println("Prueba de puntero ", l)
+			// out of index
+
+			if len(*l) == 1 {
+				*l = append([]Process{} )
+			} else {
+				*l = append((*l)[index+1:])
+			}
+			//fmt.Println("Prueba de puntero ", l)
 		}
 		bestFitLazy(os.memory, copy[index])
 	}
@@ -90,11 +96,12 @@ func bestFitLazy(m Memory, p Process) {
 func bestFit(m *Memory, p *Process) {
 	var internalFragmentation int
 	var idPartition int
+	idPartition = -1
 	internalFragmentation = math.MaxInt
 
 	for index := range m.partitions {
 		partition := m.partitions[index]
-        //fmt.Println("partition", partition)
+		//fmt.Println("partition", partition)
 		if partition.state && partition.size >= p.size {
 			//fmt.Println(index, "Entro prof1")
 			empty := partition.size - p.size
@@ -105,23 +112,23 @@ func bestFit(m *Memory, p *Process) {
 		}
 	}
 
-	if idPartition == 0 {
-		index := bestFitSwap(*m, *p)
-		swapOut(index)
+	if idPartition == -1 {
+		idPartition = bestFitSwap(*m, *p)
+		swapOut(idPartition)
 	}
 
 	selectedPartition := &m.partitions[idPartition]
 
-    //fmt.Println(selectedPartition)
+	//fmt.Println(selectedPartition)
 	selectedPartition.state = false
-    //fmt.Println(selectedPartition.state)
-    //fmt.Println(m.partitions[idPartition].state)
+	//fmt.Println(selectedPartition.state)
+	//fmt.Println(m.partitions[idPartition].state)
 	selectedPartition.internalFragmentation = selectedPartition.size - p.size
-    p.loaded = true
+	p.loaded = true
 	selectedPartition.process = *p
-    //fmt.Println(p.loaded)
-    //fmt.Println(selectedPartition)
-    //fmt.Println(m.partitions[idPartition])
+	//fmt.Println(p.loaded)
+	//fmt.Println(selectedPartition)
+	//fmt.Println(m.partitions[idPartition])
 }
 
 func bestFitSwap(m Memory, p Process) int {
@@ -141,24 +148,25 @@ func bestFitSwap(m Memory, p Process) int {
 	return idPartition
 }
 
-func (p *Process) timeOut(quantum int, queue []Process, os *OS, cola *[]Process) {
+func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process) {
 	if p.time >= quantum {
-        os.time = os.time + quantum
-        os.addReady(cola)
-
-
-		queue = append(queue, *p)
+		os.time = os.time + quantum
+		os.addReady(cola)
 		p.time = p.time - quantum
+		*queue = append(*queue, *p)
+		fmt.Println("el nuevo tiempo es ", (p.time - quantum))
 	} else {
-        os.time = os.time + p.time
-        os.addReady(cola)
-        fmt.Println("cacique: ", os.queue)
-
-
-        if len(queue) > 1 {
-            queue = append(queue[1:])
-            p.time = 0
-        } 
+		os.time = os.time + p.time
+		os.addReady(cola)
+		fmt.Println("cacique: ", os.queue)
+		fmt.Println("cacique: ", cola)
+		p.time = 0
+		/*
+		if len(queue) > 1 {
+			queue = append(queue[1:])
+			p.time = 0
+		}
+		*/
 	}
 }
 
@@ -193,43 +201,48 @@ func (os *OS) initialize(m Memory) {
 }
 
 func main() {
-     // OS definition 
-     var cola []Process 
-     linux:= new(OS)
-     memoria := Memory{
-         partitions: [3]MemoryPartition{
-             {id: 1, size: 100, state: true},
-             {id: 2, size: 75, state: true},
-             {id: 3, size: 35, state: true},
-         },
-     }
-     linux.initialize(memoria)
-     cola = append(cola, Process{1, 30, 1, 3, false}, Process{2, 40, 1, 7, false}, Process{3, 100, 2, 10, false})
-     var input string
-     fmt.Print("Inicio del Sistema Operativo")
- 
-     for {
-         fmt.Scanln(&input)
-         if input == "" {
-             if !linux.processor.process.isEmpty() {
-                 linux.processor.process.timeOut(5, linux.queue, linux, &cola)
-                 linux.processor.process = linux.queue[0]
-                 linux.queue = append(linux.queue[1:])
-                 fmt.Println("Duende")       
-             } else {
-                linux.processor.process = cola[0]
-                cola = append(cola[1:] )
-                 bestFit(&linux.memory, &linux.processor.process)
-             }
-            fmt.Println("TIME: ", linux.time,  "----------------------------------------------------")
-            fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid)
-            fmt.Println("Esta es la cola de listos", linux.queue)
-            fmt.Println("Esta es la cola de input", cola)
+	// OS definition
+	var cola []Process
+	linux := new(OS)
+	memoria := Memory{
+		partitions: [3]MemoryPartition{
+			{id: 1, size: 100, state: true},
+			{id: 2, size: 75, state: true},
+			{id: 3, size: 35, state: true},
+		},
+	}
+	linux.initialize(memoria)
+	cola = append(cola, Process{1, 30, 1, 3, false}, Process{2, 40, 1, 7, false}, Process{3, 100, 2, 10, false})
+	var input string
+	fmt.Print("Inicio del Sistema Operativo")
 
- 
-         } else {
-             break
-         }
-     }
+	for {
+		fmt.Scanln(&input)
+		if input == "" {
+			if !linux.processor.process.isEmpty() {
+				linux.processor.process.timeOut(5, &linux.queue, linux, &cola)
+				linux.processor.process = linux.queue[0]
+				linux.queue = append(linux.queue[1:])
+				bestFit(&linux.memory, &linux.processor.process)
+
+				fmt.Println("Duende")
+			} else {
+				linux.processor.process = cola[0]
+				cola = append(cola[1:])
+				bestFit(&linux.memory, &linux.processor.process)
+			}
+			if len(linux.queue) == 0 && linux.processor.process.time == 0 {
+				fmt.Println("Se termino todo")
+				break
+			}
+			fmt.Println("TIME: ", linux.time, "----------------------------------------------------")
+			fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid)
+			fmt.Println("Esta es la cola de listos", linux.queue)
+			fmt.Println("Esta es la cola de input", cola)
+
+		} else {
+			break
+		}
+	}
 
 }
