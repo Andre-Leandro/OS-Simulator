@@ -58,14 +58,11 @@ func (os *OS) addReady(l *[]Process) {
 
 		if copy[index].arrivalTime < os.time { // menor o igual tambien 
 			os.queue = append(os.queue, copy[index])
-			// out of index
-
 			if len(*l) == 1 {
 				*l = append([]Process{} )
 			} else {
 				*l = append((*l)[index+1:])
 			}
-			//fmt.Println("Prueba de puntero ", l)
 		}
 		bestFitLazy(os.memory, copy[index])
 	}
@@ -101,34 +98,23 @@ func bestFit(m *Memory, p *Process) {
 
 	for index := range m.partitions {
 		partition := m.partitions[index]
-		//fmt.Println("partition", partition)
 		if partition.state && partition.size >= p.size {
-			//fmt.Println(index, "Entro prof1")
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
-				//fmt.Println("Entre 2")
 				idPartition = index
 			}
 		}
 	}
-
 	if idPartition == -1 {
 		idPartition = bestFitSwap(*m, *p)
 		swapOut(idPartition)
+		m.partitions[idPartition].process.loaded = false
 	}
-
 	selectedPartition := &m.partitions[idPartition]
-
-	//fmt.Println(selectedPartition)
 	selectedPartition.state = false
-	//fmt.Println(selectedPartition.state)
-	//fmt.Println(m.partitions[idPartition].state)
 	selectedPartition.internalFragmentation = selectedPartition.size - p.size
 	p.loaded = true
 	selectedPartition.process = *p
-	//fmt.Println(p.loaded)
-	//fmt.Println(selectedPartition)
-	//fmt.Println(m.partitions[idPartition])
 }
 
 func bestFitSwap(m Memory, p Process) int {
@@ -154,19 +140,10 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.addReady(cola)
 		p.time = p.time - quantum
 		*queue = append(*queue, *p)
-		fmt.Println("el nuevo tiempo es ", (p.time - quantum))
 	} else {
 		os.time = os.time + p.time
 		os.addReady(cola)
-		fmt.Println("cacique: ", os.queue)
-		fmt.Println("cacique: ", cola)
 		p.time = 0
-		/*
-		if len(queue) > 1 {
-			queue = append(queue[1:])
-			p.time = 0
-		}
-		*/
 	}
 }
 
@@ -201,7 +178,6 @@ func (os *OS) initialize(m Memory) {
 }
 
 func main() {
-	// OS definition
 	var cola []Process
 	linux := new(OS)
 	memoria := Memory{
@@ -221,18 +197,20 @@ func main() {
 		if input == "" {
 			if !linux.processor.process.isEmpty() {
 				linux.processor.process.timeOut(5, &linux.queue, linux, &cola)
+				if linux.queue[0].loaded == false {
+					bestFit(&linux.memory, &linux.queue[0])
+				}
 				linux.processor.process = linux.queue[0]
 				linux.queue = append(linux.queue[1:])
-				bestFit(&linux.memory, &linux.processor.process)
-
-				fmt.Println("Duende")
+				
 			} else {
+				bestFit(&linux.memory, &cola[0])
 				linux.processor.process = cola[0]
 				cola = append(cola[1:])
-				bestFit(&linux.memory, &linux.processor.process)
+				
 			}
 			if len(linux.queue) == 0 && linux.processor.process.time == 0 {
-				fmt.Println("Se termino todo")
+				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
 			fmt.Println("TIME: ", linux.time, "----------------------------------------------------")
