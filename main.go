@@ -1,9 +1,14 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"strconv"
+	"strings"
 	"math"
 )
+
 
 type OS struct {
 	time      int
@@ -34,6 +39,10 @@ type MemoryPartition struct {
 
 type Memory struct {
 	partitions [3]MemoryPartition
+}
+
+type NewQueue struct {
+    queue []Process
 }
 
 type ReadyQueue struct {
@@ -177,7 +186,61 @@ func (os *OS) initialize(m Memory) {
 	os.memory = m
 }
 
+func ReadProcessesFromFile(filename string) ([]Process, error) {
+    file, err := os.Open(filename)
+    if err != nil {
+        return nil, err
+    }
+    defer file.Close()
+
+    processes := []Process{}
+
+    scanner := bufio.NewScanner(file)
+    for scanner.Scan() {
+        line := scanner.Text()
+        values := strings.Fields(line)
+        if len(values) != 4 {
+            return nil, fmt.Errorf("Invalid input format: %s", line)
+        }
+
+        pid, err := strconv.Atoi(values[0])
+        if err != nil {
+            return nil, err
+        }
+        size, err := strconv.Atoi(values[1])
+        if err != nil {
+            return nil, err
+        }
+        arrivalTime, err := strconv.Atoi(values[2])
+        if err != nil {
+            return nil, err
+        }
+        time, err := strconv.Atoi(values[3])
+        if err != nil {
+            return nil, err
+        }
+
+        process := Process{pid, size, arrivalTime, time, false}
+        processes = append(processes, process)
+    }
+
+    if err := scanner.Err(); err != nil {
+        return nil, err
+    }
+
+    return processes, nil
+}
+
+
+
 func main() {
+	processes, err := ReadProcessesFromFile("ejemplo.txt")
+    if err != nil {
+        fmt.Println("Error:", err)
+        return
+    }
+
+
 	var cola []Process
 	linux := new(OS)
 	memoria := Memory{
@@ -188,7 +251,8 @@ func main() {
 		},
 	}
 	linux.initialize(memoria)
-	cola = append(cola, Process{1, 30, 1, 3, false}, Process{2, 40, 1, 7, false}, Process{3, 100, 2, 10, false})
+
+cola = append(cola, processes...)
 	var input string
 	fmt.Print("Inicio del Sistema Operativo")
 
