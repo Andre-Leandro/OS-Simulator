@@ -67,12 +67,17 @@ func (os *OS) addReady(l *[]Process) {
 
 		if copy[index].arrivalTime < os.time { // menor o igual tambien 
 			os.queue = append(os.queue, copy[index])
-			if len(*l) == 1 {
-				*l = append([]Process{} )
-			} else {
-				*l = append((*l)[index+1:])
+
+			//fmt.Println(len(*l))
+
+			if len(*l) > 0  {
+				if len(*l) == 1 {
+					*l = append([]Process{} )
+				} else {
+					*l = append((*l)[index+1:])
+				}
 			}
-		}
+			}
 		bestFitLazy(os.memory, copy[index])
 	}
 }
@@ -144,7 +149,7 @@ func bestFitSwap(m Memory, p Process) int {
 }
 
 func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process) {
-	if p.time >= quantum {
+	if p.time > quantum {
 		os.time = os.time + quantum
 		os.addReady(cola)
 		p.time = p.time - quantum
@@ -153,6 +158,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.time = os.time + p.time
 		os.addReady(cola)
 		p.time = 0
+		fmt.Println("Termino el proceso: ", p.pid)
 	}
 }
 
@@ -179,7 +185,7 @@ func (p Process) isEmpty() bool {
 }
 
 func (m Memory) idLoaded() {
-	fmt.Printf("hola")
+	fmt.Printf("caragada")
 }
 
 func (os *OS) initialize(m Memory) {
@@ -232,7 +238,6 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 }
 
 
-
 func main() {
 	processes, err := ReadProcessesFromFile("ejemplo.txt")
     if err != nil {
@@ -261,6 +266,13 @@ cola = append(cola, processes...)
 		if input == "" {
 			if !linux.processor.process.isEmpty() {
 				linux.processor.process.timeOut(5, &linux.queue, linux, &cola)
+
+				//to not go out of bounds
+				if len(linux.queue) == 0 && linux.processor.process.time <= 0 {
+					fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
+					break
+				}
+
 				if linux.queue[0].loaded == false {
 					bestFit(&linux.memory, &linux.queue[0])
 				}
@@ -273,7 +285,10 @@ cola = append(cola, processes...)
 				cola = append(cola[1:])
 				
 			}
-			if len(linux.queue) == 0 && linux.processor.process.time == 0 {
+			fmt.Println("cola", len(linux.queue))
+
+
+			if len(linux.queue) == 0 && linux.processor.process.time <= 0 {
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
