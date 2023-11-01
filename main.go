@@ -61,7 +61,7 @@ func (os *OS) addReady(l *[]Process) {
 	copy := *l
 
 	for index := range copy {
-		if len(os.queue) == 5 {
+		if len(os.queue) == 4 {
 			break
 		}
 
@@ -285,8 +285,6 @@ cola = append(cola, processes...)
 				cola = append(cola[1:])
 				
 			}
-			fmt.Println("cola", len(linux.queue))
-
 
 			if len(linux.queue) == 0 && linux.processor.process.time <= 0 {
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
