@@ -65,16 +65,20 @@ func (os *OS) addReady(l *[]Process) {
 			break
 		}
 
-		if copy[index].arrivalTime < os.time { // menor o igual tambien 
+		fmt.Println(l)
+
+		if copy[index].arrivalTime <= os.time { // menor o igual tambien 
 			os.queue = append(os.queue, copy[index])
 
-			//fmt.Println(len(*l))
+			
 
-			if len(*l) > 0  {
+			if len(*l) > 0 {
 				if len(*l) == 1 {
-					*l = append([]Process{} )
+					// Si la lista tiene un solo elemento, simplemente haz que la lista esté vacía.
+					*l = []Process{}
 				} else {
-					*l = append((*l)[index+1:])
+					// Si la lista tiene más de un elemento, elimina el primer elemento.
+					*l = (*l)[1:]
 				}
 			}
 			}
