@@ -60,24 +60,20 @@ func swapOut(i int) {
 func (os *OS) addReady(l *[]Process) {
 	copy := *l
 
+	fmt.Println(os.queue)
+	fmt.Println(len(os.queue))
+	
 	for index := range copy {
 		if len(os.queue) == 4 {
 			break
 		}
 
-		fmt.Println(l)
-
 		if copy[index].arrivalTime <= os.time { // menor o igual tambien 
 			os.queue = append(os.queue, copy[index])
-
-			
-
 			if len(*l) > 0 {
 				if len(*l) == 1 {
-					// Si la lista tiene un solo elemento, simplemente haz que la lista esté vacía.
 					*l = []Process{}
 				} else {
-					// Si la lista tiene más de un elemento, elimina el primer elemento.
 					*l = (*l)[1:]
 				}
 			}
@@ -163,7 +159,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.addReady(cola)
 		p.time = 0
 		fmt.Println("Termino el proceso: ", p.pid)
-	}
+	}	
 }
 
 func sort(input ReadyQueue) {
@@ -261,7 +257,7 @@ func main() {
 	}
 	linux.initialize(memoria)
 
-cola = append(cola, processes...)
+	cola = append(cola, processes...)
 	var input string
 	fmt.Print("Inicio del Sistema Operativo")
 
@@ -282,8 +278,10 @@ cola = append(cola, processes...)
 				}
 				linux.processor.process = linux.queue[0]
 				linux.queue = append(linux.queue[1:])
+				linux.addReady(&cola)
 				
 			} else {
+				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				bestFit(&linux.memory, &cola[0])
 				linux.processor.process = cola[0]
 				cola = append(cola[1:])
