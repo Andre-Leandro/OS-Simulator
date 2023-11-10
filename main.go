@@ -202,13 +202,17 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
     processes := []Process{}
 
     scanner := bufio.NewScanner(file)
+    // Agregar una verificación para ignorar la primera línea
+    if scanner.Scan() {
+        // Ignorar la primera línea (encabezado o comentario)
+    }
+
     for scanner.Scan() {
         line := scanner.Text()
         values := strings.Fields(line)
         if len(values) != 4 {
-            return nil, fmt.Errorf("Invalid input format: %s", line)
+            return nil, fmt.Errorf("Formato de entrada invalido: %s", line)
         }
-
         pid, err := strconv.Atoi(values[0])
         if err != nil {
             return nil, err
@@ -236,6 +240,7 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 
     return processes, nil
 }
+
 
 
 func main() {
@@ -268,6 +273,10 @@ func main() {
 				linux.processor.process.timeOut(5, &linux.queue, linux, &cola)
 
 				//to not go out of bounds
+				if len(linux.queue) == 0 && len(cola) > 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
+					linux.time = cola[0].arrivalTime
+					linux.addReady(&cola)
+				}
 				if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
 					fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 					break
