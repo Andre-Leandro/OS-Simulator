@@ -268,11 +268,10 @@ func main() {
 				linux.processor.process.timeOut(5, &linux.queue, linux, &cola)
 
 				//to not go out of bounds
-				if len(linux.queue) == 0 && linux.processor.process.time <= 0 {
+				if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
 					fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 					break
 				}
-
 				if linux.queue[0].loaded == false {
 					bestFit(&linux.memory, &linux.queue[0])
 				}
@@ -282,13 +281,13 @@ func main() {
 				
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
+				linux.time = cola[0].arrivalTime
 				bestFit(&linux.memory, &cola[0])
 				linux.processor.process = cola[0]
 				cola = append(cola[1:])
-				
 			}
 
-			if len(linux.queue) == 0 && linux.processor.process.time <= 0 {
+			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
