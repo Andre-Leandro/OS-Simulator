@@ -119,10 +119,6 @@ func bestFit(m *Memory, p *Process, os *OS) {
 		(*os).memory.partitions[idPartition].process.loaded = false
 	}
 
-	var newLoaded bool = p.loaded
-
-	newLoaded = true
-
 	// selectedPartition := &m.partitions[idPartition]
 	// selectedPartition.state = false // Ocupado
 	// selectedPartition.internalFragmentation = selectedPartition.size - p.size
@@ -131,8 +127,8 @@ func bestFit(m *Memory, p *Process, os *OS) {
 
 	(*m).partitions[idPartition].state = false // Ocupado
 	(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
+	(*p).loaded = true
 	(*m).partitions[idPartition].process = *p
-	(*m).partitions[idPartition].process.loaded = true
 }
 
 func bestFitSwap(m Memory, p Process) int {
@@ -270,7 +266,7 @@ func quicksort2(processes []Process) []Process {
 }
 
 func main() {
-	processes, err := ReadProcessesFromFile("ejemplo2.txt")
+	processes, err := ReadProcessesFromFile("ejemplo.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
