@@ -3,12 +3,11 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
-	"math"
 )
-
 
 type OS struct {
 	time      int
@@ -33,7 +32,7 @@ type MemoryPartition struct {
 	id                    int
 	size                  int
 	state                 bool
-	process               Process
+	process               *Process
 	internalFragmentation int
 }
 
@@ -42,7 +41,7 @@ type Memory struct {
 }
 
 type NewQueue struct {
-    queue []Process
+	queue []Process
 }
 
 type ReadyQueue struct {
@@ -53,8 +52,9 @@ func (q ReadyQueue) estado() {
 	fmt.Println(q.queue)
 }
 
-func swapOut(i int) {
-	fmt.Println("Se libero la particion", i)
+func swapOut(p *Process) {
+	fmt.Println("Se liberó la partición", p.pid)
+	p.loaded = false
 }
 
 func (os *OS) addReady(l *[]Process) {
@@ -62,13 +62,13 @@ func (os *OS) addReady(l *[]Process) {
 
 	fmt.Println(os.queue)
 	fmt.Println(len(os.queue))
-	
+
 	for index := range copy {
 		if len(os.queue) == 4 {
 			break
 		}
 
-		if copy[index].arrivalTime <= os.time { // menor o igual tambien 
+		if copy[index].arrivalTime <= os.time { // menor o igual también
 			os.queue = append(os.queue, copy[index])
 			if len(*l) > 0 {
 				if len(*l) == 1 {
@@ -77,12 +77,12 @@ func (os *OS) addReady(l *[]Process) {
 					*l = (*l)[1:]
 				}
 			}
-			}
-		bestFitLazy(os.memory, copy[index])
+			bestFitLazy(&os.memory, &copy[index])
+		}
 	}
 }
 
-func bestFitLazy(m Memory, p Process) {
+func bestFitLazy(m *Memory, p *Process) {
 	var internalFragmentation int
 	var idPartition int
 	internalFragmentation = math.MaxInt
@@ -98,9 +98,11 @@ func bestFitLazy(m Memory, p Process) {
 	}
 	if idPartition != 0 {
 		selectedPartition := &m.partitions[idPartition]
-		selectedPartition.state = false
-		selectedPartition.internalFragmentation = selectedPartition.size - p.size
-		selectedPartition.process = p
+		if selectedPartition.process != nil {
+			selectedPartition.state = false
+			selectedPartition.internalFragmentation = selectedPartition.size - p.size
+			selectedPartition.process = p
+		}
 	}
 }
 
@@ -120,26 +122,36 @@ func bestFit(m *Memory, p *Process) {
 		}
 	}
 	if idPartition == -1 {
-		idPartition = bestFitSwap(*m, *p)
-		swapOut(idPartition)
-		m.partitions[idPartition].process.loaded = false
+		idPartition = bestFitSwap(m, p)
+		swapOut(&m.partitions[idPartition].process)
+		fmt.Println("Cacatua", idPartition)
+		if m.partitions[idPartition].process != nil {
+			m.partitions[idPartition].process.loaded = false
+			fmt.Println(m.partitions[idPartition])
+		} else {
+			fmt.Println("selectedPartition.process es nil")
+		}
 	}
 	selectedPartition := &m.partitions[idPartition]
-	selectedPartition.state = false // Ocupado
-	selectedPartition.internalFragmentation = selectedPartition.size - p.size
-	p.loaded = true
-	selectedPartition.process = *p
-	fmt.Print("laguna")
-	fmt.Print(*selectedPartition)
+	if selectedPartition != nil {
+		selectedPartition.state = false // Ocupado
+		selectedPartition.internalFragmentation = selectedPartition.size - p.size
+		p.loaded = true
+		selectedPartition.process = p
+		fmt.Print("laguna")
+		fmt.Print(*selectedPartition)
+	} else {
+		fmt.Println("selectedPartition es nil")
+	}
 }
 
-func bestFitSwap(m Memory, p Process) int {
+func bestFitSwap(m *Memory, p *Process) int {
 	var internalFragmentation int
 	var idPartition int
 	internalFragmentation = math.MaxInt
 
 	for index := range m.partitions {
-		partition := m.partitions[index]
+		partition := &m.partitions[index]
 		if partition.size >= p.size {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
@@ -155,13 +167,15 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.time = os.time + quantum
 		os.addReady(cola)
 		p.time = p.time - quantum
-		*queue = append(*queue, *p)
+		if p.time > 0 {
+			*queue = append(*queue, *p)
+		}
 	} else {
 		os.time = os.time + p.time
 		os.addReady(cola)
 		p.time = 0
 		fmt.Println("Termino el proceso: ", p.pid)
-	}	
+	}
 }
 
 func sort(input ReadyQueue) {
@@ -169,7 +183,6 @@ func sort(input ReadyQueue) {
 		fmt.Print("este es el numero ", i)
 		for j := range input.queue[i:] {
 			fmt.Print(j+i, " - ")
-
 
 		}
 		fmt.Println("")
@@ -193,78 +206,78 @@ func (m Memory) idLoaded() {
 
 func (os *OS) initialize(m Memory) {
 	os.memory = m
+	os.queue = []Process{}     // Inicializa la cola
+	os.processor = Processor{} // Inicializa el procesador
 }
 
 func ReadProcessesFromFile(filename string) ([]Process, error) {
-    file, err := os.Open(filename)
-    if err != nil {
-        return nil, err
-    }
-    defer file.Close()
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 
-    processes := []Process{}
+	processes := []Process{}
 
-    scanner := bufio.NewScanner(file)
-    // Agregar una verificación para ignorar la primera línea
-    if scanner.Scan() {
-        // Ignorar la primera línea (encabezado o comentario)
-    }
+	scanner := bufio.NewScanner(file)
+	// Agregar una verificación para ignorar la primera línea
+	if scanner.Scan() {
+		// Ignorar la primera línea (encabezado o comentario)
+	}
 
-    for scanner.Scan() {
-        line := scanner.Text()
-        values := strings.Fields(line)
-        if len(values) != 4 {
-            return nil, fmt.Errorf("Formato de entrada invalido: %s", line)
-        }
-        pid, err := strconv.Atoi(values[0])
-        if err != nil {
-            return nil, err
-        }
-        size, err := strconv.Atoi(values[1])
-        if err != nil {
-            return nil, err
-        }
-        arrivalTime, err := strconv.Atoi(values[2])
-        if err != nil {
-            return nil, err
-        }
-        time, err := strconv.Atoi(values[3])
-        if err != nil {
-            return nil, err
-        }
+	for scanner.Scan() {
+		line := scanner.Text()
+		values := strings.Fields(line)
+		if len(values) != 4 {
+			return nil, fmt.Errorf("Formato de entrada invalido: %s", line)
+		}
+		pid, err := strconv.Atoi(values[0])
+		if err != nil {
+			return nil, err
+		}
+		size, err := strconv.Atoi(values[1])
+		if err != nil {
+			return nil, err
+		}
+		arrivalTime, err := strconv.Atoi(values[2])
+		if err != nil {
+			return nil, err
+		}
+		time, err := strconv.Atoi(values[3])
+		if err != nil {
+			return nil, err
+		}
 
-        process := Process{pid, size, arrivalTime, time, false}
-        processes = append(processes, process)
-    }
+		process := Process{pid, size, arrivalTime, time, false}
+		processes = append(processes, process)
+	}
 
-    if err := scanner.Err(); err != nil {
-        return nil, err
-    }
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
 
-    return processes, nil
+	return processes, nil
 }
 
 func printPartitionInfo(partition MemoryPartition) {
-    state := "Occupied"
-    if partition.state {
-        state = "Free"
-    }
-    processName := "N/A"
-    if partition.process.pid != 0 {
-        processName = fmt.Sprintf("Process-%d", partition.process.pid)
-    }
-    fmt.Printf("| %-10d | %-10d | %-10s | %-15d | %-10s |\n",
-        partition.id, partition.size, state, partition.internalFragmentation, processName)
+	state := "Occupied"
+	if partition.state {
+		state = "Free"
+	}
+	processName := "N/A"
+	if partition.process != nil && partition.process.pid != 0 {
+		processName = fmt.Sprintf("Process-%d", partition.process.pid)
+	}
+	fmt.Printf("| %-10d | %-10d | %-10s | %-15d | %-10s |\n",
+		partition.id, partition.size, state, partition.internalFragmentation, processName)
 }
-
 
 func main() {
 	processes, err := ReadProcessesFromFile("ejemplo.txt")
-    if err != nil {
-        fmt.Println("Error:", err)
-        return
-    }
-
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
 
 	var cola []Process
 	linux := new(OS)
@@ -288,11 +301,11 @@ func main() {
 				linux.processor.process.timeOut(5, &linux.queue, linux, &cola)
 
 				//to not go out of bounds
-				if len(linux.queue) == 0 && len(cola) > 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
+				if len(linux.queue) == 0 && len(cola) > 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 					linux.time = cola[0].arrivalTime
 					linux.addReady(&cola)
 				}
-				if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
+				if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 					fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 					break
 				}
@@ -302,7 +315,7 @@ func main() {
 				linux.processor.process = linux.queue[0]
 				linux.queue = append(linux.queue[1:])
 				linux.addReady(&cola)
-				
+
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				linux.time = cola[0].arrivalTime
@@ -313,12 +326,12 @@ func main() {
 				cola = append(cola[1:])
 			}
 
-			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
+			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
 			fmt.Println("TIME: ", linux.time, "----------------------------------------------------")
-			fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid)
+			fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid, linux.processor.process.loaded)
 			fmt.Println("Esta es la cola de listos", linux.queue)
 			fmt.Println("Esta es la cola de input", cola)
 			fmt.Println("----------------------------------------------------------------------")
