@@ -111,7 +111,7 @@ func bestFit(m *Memory, p *Process) {
 	internalFragmentation = math.MaxInt
 
 	for index := range m.partitions {
-		partition := m.partitions[index]
+		partition := &m.partitions[index] // Obtener una referencia a la partición real en la estructura Memory
 		if partition.state && partition.size >= p.size {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
@@ -125,12 +125,12 @@ func bestFit(m *Memory, p *Process) {
 		m.partitions[idPartition].process.loaded = false
 	}
 	selectedPartition := &m.partitions[idPartition]
-	selectedPartition.state = false // ocupado
+	selectedPartition.state = false // Ocupado
 	selectedPartition.internalFragmentation = selectedPartition.size - p.size
 	p.loaded = true
 	selectedPartition.process = *p
 	fmt.Print("laguna")
-	fmt.Print(selectedPartition)
+	fmt.Print(*selectedPartition)
 }
 
 func bestFitSwap(m Memory, p Process) int {
@@ -307,6 +307,8 @@ func main() {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				linux.time = cola[0].arrivalTime
 				bestFit(&linux.memory, &cola[0])
+				fmt.Print("leyenda")
+				fmt.Print(*&linux.memory.partitions[2])
 				linux.processor.process = cola[0]
 				cola = append(cola[1:])
 			}
@@ -322,9 +324,9 @@ func main() {
 			fmt.Println("----------------------------------------------------------------------")
 			fmt.Printf("| %-10s | %-10s | %-10s | %-15s | %-10s |\n", "ID", "Size", "State", "Internal Frag.", "Process")
 			fmt.Println("------------------------------------------------------------------------")
-			printPartitionInfo(memoria.partitions[0])
-			printPartitionInfo(memoria.partitions[1])
-			printPartitionInfo(memoria.partitions[2])
+			printPartitionInfo(linux.memory.partitions[0])
+			printPartitionInfo(linux.memory.partitions[1])
+			printPartitionInfo(linux.memory.partitions[2])
 			fmt.Println("------------------------------------------------------------------------")
 
 		} else {
