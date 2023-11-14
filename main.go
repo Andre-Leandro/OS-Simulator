@@ -53,8 +53,9 @@ func (q ReadyQueue) estado() {
 	fmt.Println(q.queue)
 }
 
-func swapOut(i int) {
-	fmt.Println("Se libero la particion", i)
+func swapOut(p *Process) {
+	p.loaded = false
+	fmt.Println("Se libero la particion maleta")
 }
 
 func (os *OS) addReady(l *[]Process) {
@@ -104,7 +105,7 @@ func bestFitLazy(m Memory, p Process) {
 	}
 }
 
-func bestFit(m *Memory, p *Process) {
+func bestFit(m *Memory, p *Process, os *OS) {
 	var internalFragmentation int
 	var idPartition int
 	idPartition = -1
@@ -119,16 +120,41 @@ func bestFit(m *Memory, p *Process) {
 			}
 		}
 	}
+
+	var process4 *Process
+
 	if idPartition == -1 {
 		idPartition = bestFitSwap(*m, *p)
-		swapOut(idPartition)
-		m.partitions[idPartition].process.loaded = false
+		swapOut(&m.partitions[idPartition].process)
+	
+		os.memory.partitions[idPartition].process.loaded = false
 	}
+
+	if process4 != nil {
+		fmt.Println("Veremos que pinta ", process4.loaded)
+	} else {
+		fmt.Println("process4 es nil")
+	}
+
+	// Crear una nueva variable para almacenar el estado del proceso que se va a asignar a la partición
+	var newLoaded bool = p.loaded
+
+	// Modificar el estado del proceso
+	newLoaded = true
+
+	// Asignar el proceso a la partición
 	selectedPartition := &m.partitions[idPartition]
 	selectedPartition.state = false // Ocupado
 	selectedPartition.internalFragmentation = selectedPartition.size - p.size
-	p.loaded = true
 	selectedPartition.process = *p
+	selectedPartition.process.loaded = newLoaded
+
+	if process4 != nil {
+		fmt.Println("Veremos que pinta ", process4.loaded)
+	} else {
+		fmt.Println("process4 es nil")
+	}
+
 	fmt.Print("laguna")
 	fmt.Print(*selectedPartition)
 }
@@ -297,7 +323,7 @@ func main() {
 					break
 				}
 				if linux.queue[0].loaded == false {
-					bestFit(&linux.memory, &linux.queue[0])
+					bestFit(&linux.memory, &linux.queue[0], linux)
 				}
 				linux.processor.process = linux.queue[0]
 				linux.queue = append(linux.queue[1:])
@@ -306,7 +332,7 @@ func main() {
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				linux.time = cola[0].arrivalTime
-				bestFit(&linux.memory, &cola[0])
+				bestFit(&linux.memory, &cola[0], linux)
 				fmt.Print("leyenda")
 				fmt.Print(*&linux.memory.partitions[2])
 				linux.processor.process = cola[0]
