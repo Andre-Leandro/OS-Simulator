@@ -9,7 +9,6 @@ import (
 	"math"
 )
 
-
 type OS struct {
 	time      int
 	processor Processor
@@ -49,9 +48,6 @@ type ReadyQueue struct {
 	queue []Process
 }
 
-func (q ReadyQueue) estado() {
-	fmt.Println(q.queue)
-}
 
 func swapOut(p *Process) {
 	p.loaded = false
@@ -60,9 +56,6 @@ func swapOut(p *Process) {
 
 func (os *OS) addReady(l *[]Process) {
 	copy := *l
-
-	fmt.Println(os.queue)
-	fmt.Println(len(os.queue))
 	
 	for index := range copy {
 		if len(os.queue) == 4 {
@@ -121,8 +114,6 @@ func bestFit(m *Memory, p *Process, os *OS) {
 		}
 	}
 
-	var process4 *Process
-
 	if idPartition == -1 {
 		idPartition = bestFitSwap(*m, *p)
 		swapOut(&m.partitions[idPartition].process)
@@ -130,33 +121,15 @@ func bestFit(m *Memory, p *Process, os *OS) {
 		os.memory.partitions[idPartition].process.loaded = false
 	}
 
-	if process4 != nil {
-		fmt.Println("Veremos que pinta ", process4.loaded)
-	} else {
-		fmt.Println("process4 es nil")
-	}
+		var newLoaded bool = p.loaded
 
-	// Crear una nueva variable para almacenar el estado del proceso que se va a asignar a la partición
-	var newLoaded bool = p.loaded
-
-	// Modificar el estado del proceso
 	newLoaded = true
 
-	// Asignar el proceso a la partición
 	selectedPartition := &m.partitions[idPartition]
 	selectedPartition.state = false // Ocupado
 	selectedPartition.internalFragmentation = selectedPartition.size - p.size
 	selectedPartition.process = *p
 	selectedPartition.process.loaded = newLoaded
-
-	if process4 != nil {
-		fmt.Println("Veremos que pinta ", process4.loaded)
-	} else {
-		fmt.Println("process4 es nil")
-	}
-
-	fmt.Print("laguna")
-	fmt.Print(*selectedPartition)
 }
 
 func bestFitSwap(m Memory, p Process) int {
@@ -190,24 +163,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 	}	
 }
 
-func sort(input ReadyQueue) {
-	for i := range input.queue {
-		fmt.Print("este es el numero ", i)
-		for j := range input.queue[i:] {
-			fmt.Print(j+i, " - ")
 
-
-		}
-		fmt.Println("")
-	}
-}
-
-func (p *Process) Escribir() {
-	p.pid = 5
-	fmt.Println(p.time)
-}
-
-var a NewQueue
 
 func (p Process) isEmpty() bool {
 	return p.pid == 0 && p.time == 0 && p.arrivalTime == 0 && p.size == 0 // and loaded
@@ -284,13 +240,42 @@ func printPartitionInfo(partition MemoryPartition) {
 }
 
 
+func quicksort2(processes []Process) []Process {
+    if len(processes) <= 1 {
+        return processes
+    }
+
+    pivotIndex := len(processes) / 2
+    pivot := processes[pivotIndex]
+    var less []Process
+    var greater []Process
+    var equal []Process
+
+    for _, p := range processes {
+        if p.arrivalTime < pivot.arrivalTime {
+            less = append(less, p)
+        } else if p.arrivalTime > pivot.arrivalTime {
+            greater = append(greater, p)
+        } else {
+            if p.pid < pivot.pid {
+                less = append(less, p)
+            } else if p.pid > pivot.pid {
+                greater = append(greater, p)
+            } else {
+                equal = append(equal, p)
+            }
+        }
+    }
+    return append(append(quicksort2(less), equal...), quicksort2(greater)...)
+}
+
+
 func main() {
-	processes, err := ReadProcessesFromFile("ejemplo.txt")
+	processes, err := ReadProcessesFromFile("ejemplo2.txt")
     if err != nil {
         fmt.Println("Error:", err)
         return
     }
-
 
 	var cola []Process
 	linux := new(OS)
@@ -302,8 +287,10 @@ func main() {
 		},
 	}
 	linux.initialize(memoria)
-
 	cola = append(cola, processes...)
+	cola = quicksort2(cola)
+	fmt.Println(cola)
+
 	var input string
 	fmt.Print("Inicio del Sistema Operativo")
 
@@ -346,14 +333,14 @@ func main() {
 			fmt.Println("TIME: ", linux.time, "----------------------------------------------------")
 			fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid)
 			fmt.Println("Esta es la cola de listos", linux.queue)
-			fmt.Println("Esta es la cola de input", cola)
-			fmt.Println("----------------------------------------------------------------------")
+			fmt.Println("Esta es la cola de input/nuevos", cola)
+			fmt.Println("-----------------------------------------------------------------------")
 			fmt.Printf("| %-10s | %-10s | %-10s | %-15s | %-10s |\n", "ID", "Size", "State", "Internal Frag.", "Process")
-			fmt.Println("------------------------------------------------------------------------")
+			fmt.Println("-----------------------------------------------------------------------")
 			printPartitionInfo(linux.memory.partitions[0])
 			printPartitionInfo(linux.memory.partitions[1])
 			printPartitionInfo(linux.memory.partitions[2])
-			fmt.Println("------------------------------------------------------------------------")
+			fmt.Println("-----------------------------------------------------------------------")
 
 		} else {
 			break
