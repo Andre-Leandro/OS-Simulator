@@ -3,26 +3,27 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
-	"math"
 )
 
-
 type OS struct {
-	time      int
-	processor Processor
-	memory    Memory
+	time               int
+	processor          Processor
+	memory             Memory
+	completedProcesses []Process
 	ReadyQueue
 }
 
 type Process struct {
-	pid         int
-	size        int
-	arrivalTime int
-	time        int
-	loaded      bool
+	pid            int
+	size           int
+	arrivalTime    int
+	turnaroundTime int
+	time           int
+	loaded         bool
 }
 
 type Processor struct {
@@ -42,7 +43,7 @@ type Memory struct {
 }
 
 type NewQueue struct {
-    queue []Process
+	queue []Process
 }
 
 type ReadyQueue struct {
@@ -62,13 +63,13 @@ func (os *OS) addReady(l *[]Process) {
 
 	fmt.Println(os.queue)
 	fmt.Println(len(os.queue))
-	
+
 	for index := range copy {
 		if len(os.queue) == 4 {
 			break
 		}
 
-		if copy[index].arrivalTime <= os.time { // menor o igual tambien 
+		if copy[index].arrivalTime <= os.time { // menor o igual tambien
 			os.queue = append(os.queue, copy[index])
 			if len(*l) > 0 {
 				if len(*l) == 1 {
@@ -77,7 +78,7 @@ func (os *OS) addReady(l *[]Process) {
 					*l = (*l)[1:]
 				}
 			}
-			}
+		}
 		bestFitLazy(os.memory, copy[index])
 	}
 }
@@ -104,7 +105,7 @@ func bestFitLazy(m Memory, p Process) {
 	}
 }
 
-func bestFit(m *Memory, p *Process) {
+func bestFit(os *OS, m *Memory, p *Process) {
 	var internalFragmentation int
 	var idPartition int
 	idPartition = -1
@@ -120,7 +121,7 @@ func bestFit(m *Memory, p *Process) {
 		}
 	}
 	if idPartition == -1 {
-		idPartition = bestFitSwap(*m, *p)
+		idPartition = bestFitSwap(*os, *m, *p)
 		swapOut(idPartition)
 		m.partitions[idPartition].process.loaded = false
 	}
@@ -128,13 +129,15 @@ func bestFit(m *Memory, p *Process) {
 	selectedPartition.state = false
 	selectedPartition.internalFragmentation = selectedPartition.size - p.size
 	p.loaded = true
+	p.turnaroundTime = os.time
 	selectedPartition.process = *p
 }
 
-func bestFitSwap(m Memory, p Process) int {
+func bestFitSwap(os OS, m Memory, p Process) int {
 	var internalFragmentation int
 	var idPartition int
 	internalFragmentation = math.MaxInt
+	var currentProcess Process
 
 	for index := range m.partitions {
 		partition := m.partitions[index]
@@ -142,9 +145,12 @@ func bestFitSwap(m Memory, p Process) int {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
 				idPartition = index
+				currentProcess = partition.process
 			}
 		}
 	}
+	currentProcess.turnaroundTime = os.time - currentProcess.turnaroundTime
+	fmt.Println("SALE EL PROCESO: ", currentProcess.pid, currentProcess.turnaroundTime)
 	return idPartition
 }
 
@@ -158,8 +164,10 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.time = os.time + p.time
 		os.addReady(cola)
 		p.time = 0
+		p.turnaroundTime = os.time - p.turnaroundTime
 		fmt.Println("Termino el proceso: ", p.pid)
-	}	
+		os.completedProcesses = append(os.completedProcesses, *p)
+	}
 }
 
 func sort(input ReadyQueue) {
@@ -193,63 +201,98 @@ func (os *OS) initialize(m Memory) {
 }
 
 func ReadProcessesFromFile(filename string) ([]Process, error) {
-    file, err := os.Open(filename)
-    if err != nil {
-        return nil, err
-    }
-    defer file.Close()
+	file, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 
-    processes := []Process{}
+	processes := []Process{}
 
-    scanner := bufio.NewScanner(file)
-    // Agregar una verificación para ignorar la primera línea
-    if scanner.Scan() {
-        // Ignorar la primera línea (encabezado o comentario)
-    }
+	scanner := bufio.NewScanner(file)
+	// Agregar una verificación para ignorar la primera línea
+	if scanner.Scan() {
+		// Ignorar la primera línea (encabezado o comentario)
+	}
 
-    for scanner.Scan() {
-        line := scanner.Text()
-        values := strings.Fields(line)
-        if len(values) != 4 {
-            return nil, fmt.Errorf("Formato de entrada invalido: %s", line)
-        }
-        pid, err := strconv.Atoi(values[0])
-        if err != nil {
-            return nil, err
-        }
-        size, err := strconv.Atoi(values[1])
-        if err != nil {
-            return nil, err
-        }
-        arrivalTime, err := strconv.Atoi(values[2])
-        if err != nil {
-            return nil, err
-        }
-        time, err := strconv.Atoi(values[3])
-        if err != nil {
-            return nil, err
-        }
+	for scanner.Scan() {
+		line := scanner.Text()
+		values := strings.Fields(line)
+		if len(values) != 4 {
+			return nil, fmt.Errorf("Formato de entrada invalido: %s", line)
+		}
+		pid, err := strconv.Atoi(values[0])
+		if err != nil {
+			return nil, err
+		}
+		size, err := strconv.Atoi(values[1])
+		if err != nil {
+			return nil, err
+		}
+		arrivalTime, err := strconv.Atoi(values[2])
+		if err != nil {
+			return nil, err
+		}
+		time, err := strconv.Atoi(values[3])
+		if err != nil {
+			return nil, err
+		}
 
-        process := Process{pid, size, arrivalTime, time, false}
-        processes = append(processes, process)
-    }
+		turnaroundTime := 0
 
-    if err := scanner.Err(); err != nil {
-        return nil, err
-    }
+		process := Process{pid, size, arrivalTime, turnaroundTime, time, false}
+		processes = append(processes, process)
+	}
 
-    return processes, nil
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return processes, nil
 }
 
+func printStatistics(completedProcesses []Process, allProcesses []Process) {
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	fmt.Printf("| %-4s | %-18s | %-16s |\n", "PID", "Tiempo de Retorno", "Tiempo de Espera")
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	var totalTurnaroundTime, totalWaitTime int
 
+	for _, p := range completedProcesses {
+		// Buscar el proceso correspondiente en allProcesses
+		var originalProcess Process
+		for _, originalP := range allProcesses {
+			if originalP.pid == p.pid {
+				originalProcess = originalP
+				break
+			}
+		}
+
+		waitTime := p.turnaroundTime - originalProcess.time
+		fmt.Printf("| %-4d | %-18d | %-16d |\n", p.pid, p.turnaroundTime, waitTime)
+
+		// Sumar tiempos para el cálculo promedio
+		totalTurnaroundTime += p.turnaroundTime
+		totalWaitTime += waitTime
+	}
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+
+	// Calcular promedios
+	averageTurnaroundTime := float64(totalTurnaroundTime) / float64(len(completedProcesses))
+	averageWaitTime := float64(totalWaitTime) / float64(len(completedProcesses))
+
+	// Imprimir tiempos promedio en un mini cuadro
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	fmt.Printf("| %-18s | %-23.2f |\n", "Promedio Retorno", averageTurnaroundTime)
+	fmt.Printf("| %-18s | %-23.2f |\n", "Promedio Espera", averageWaitTime)
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+}
 
 func main() {
 	processes, err := ReadProcessesFromFile("ejemplo.txt")
-    if err != nil {
-        fmt.Println("Error:", err)
-        return
-    }
-
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
 
 	var cola []Process
 	linux := new(OS)
@@ -273,41 +316,46 @@ func main() {
 				linux.processor.process.timeOut(5, &linux.queue, linux, &cola)
 
 				//to not go out of bounds
-				if len(linux.queue) == 0 && len(cola) > 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
+				if len(linux.queue) == 0 && len(cola) > 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 					linux.time = cola[0].arrivalTime
 					linux.addReady(&cola)
 				}
-				if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
+				if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 					fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 					break
 				}
 				if linux.queue[0].loaded == false {
-					bestFit(&linux.memory, &linux.queue[0])
+					bestFit(linux, &linux.memory, &linux.queue[0])
 				}
 				linux.processor.process = linux.queue[0]
 				linux.queue = append(linux.queue[1:])
 				linux.addReady(&cola)
-				
+
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				linux.time = cola[0].arrivalTime
-				bestFit(&linux.memory, &cola[0])
+				bestFit(linux, &linux.memory, &cola[0])
 				linux.processor.process = cola[0]
 				cola = append(cola[1:])
 			}
 
-			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
+			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
 			fmt.Println("TIME: ", linux.time, "----------------------------------------------------")
 			fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid)
+			fmt.Println("Tiempo de espera", linux.processor.process.turnaroundTime)
 			fmt.Println("Esta es la cola de listos", linux.queue)
 			fmt.Println("Esta es la cola de input", cola)
-
+			fmt.Println("Esta es la cola de finalizados:", linux.completedProcesses)
 		} else {
 			break
 		}
 	}
+	fmt.Println(processes)
+	fmt.Println("")
+	fmt.Println("CUADRO ESTADISTICO")
+	printStatistics(linux.completedProcesses, processes)
 
 }
