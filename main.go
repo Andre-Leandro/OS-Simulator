@@ -3,10 +3,10 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
-	"math"
 )
 
 type OS struct {
@@ -49,9 +49,8 @@ type ReadyQueue struct {
 }
 
 
-func swapOut(p *Process) {
-	p.loaded = false
-	fmt.Println("Se libero la particion maleta")
+func swapOut(i int) {
+	fmt.Println("Se libero la particion maleta ", i)
 }
 
 func (os *OS) addReady(l *[]Process) {
@@ -105,7 +104,7 @@ func bestFit(m *Memory, p *Process, os *OS) {
 	internalFragmentation = math.MaxInt
 
 	for index := range m.partitions {
-		partition := &m.partitions[index] // Obtener una referencia a la partición real en la estructura Memory
+		partition := (*m).partitions[index] // Obtener una referencia a la partición real en la estructura Memory
 		if partition.state && partition.size >= p.size {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
@@ -116,7 +115,7 @@ func bestFit(m *Memory, p *Process, os *OS) {
 
 	if idPartition == -1 {
 		idPartition = bestFitSwap(*m, *p)
-		swapOut(&m.partitions[idPartition].process)
+		swapOut(idPartition + 1)
 	
 		os.memory.partitions[idPartition].process.loaded = false
 	}
@@ -278,7 +277,7 @@ func main() {
     }
 
 	var cola []Process
-	linux := new(OS)
+	var linux OS
 	memoria := Memory{
 		partitions: [3]MemoryPartition{
 			{id: 1, size: 100, state: true},
@@ -286,7 +285,7 @@ func main() {
 			{id: 3, size: 35, state: true},
 		},
 	}
-	linux.initialize(memoria)
+	(&linux).initialize(memoria)
 	cola = append(cola, processes...)
 	cola = quicksort2(cola)
 	fmt.Println(cola)
@@ -298,7 +297,7 @@ func main() {
 		fmt.Scanln(&input)
 		if input == "" {
 			if !linux.processor.process.isEmpty() {
-				linux.processor.process.timeOut(5, &linux.queue, linux, &cola)
+				linux.processor.process.timeOut(5, &linux.queue, &linux, &cola)
 
 				//to not go out of bounds
 				if len(linux.queue) == 0 && len(cola) > 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual 
@@ -310,7 +309,7 @@ func main() {
 					break
 				}
 				if linux.queue[0].loaded == false {
-					bestFit(&linux.memory, &linux.queue[0], linux)
+					bestFit(&linux.memory, &linux.queue[0], &linux)
 				}
 				linux.processor.process = linux.queue[0]
 				linux.queue = append(linux.queue[1:])
@@ -319,7 +318,7 @@ func main() {
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				linux.time = cola[0].arrivalTime
-				bestFit(&linux.memory, &cola[0], linux)
+				bestFit(&linux.memory, &cola[0], &linux)
 				fmt.Print("leyenda")
 				fmt.Print(*&linux.memory.partitions[2])
 				linux.processor.process = cola[0]
