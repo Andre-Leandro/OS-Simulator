@@ -125,10 +125,12 @@ func bestFit(m *Memory, p *Process) {
 		m.partitions[idPartition].process.loaded = false
 	}
 	selectedPartition := &m.partitions[idPartition]
-	selectedPartition.state = false
+	selectedPartition.state = false // ocupado
 	selectedPartition.internalFragmentation = selectedPartition.size - p.size
 	p.loaded = true
 	selectedPartition.process = *p
+	fmt.Print("laguna")
+	fmt.Print(selectedPartition)
 }
 
 func bestFitSwap(m Memory, p Process) int {
@@ -167,6 +169,7 @@ func sort(input ReadyQueue) {
 		fmt.Print("este es el numero ", i)
 		for j := range input.queue[i:] {
 			fmt.Print(j+i, " - ")
+
 
 		}
 		fmt.Println("")
@@ -241,6 +244,18 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
     return processes, nil
 }
 
+func printPartitionInfo(partition MemoryPartition) {
+    state := "Occupied"
+    if partition.state {
+        state = "Free"
+    }
+    processName := "N/A"
+    if partition.process.pid != 0 {
+        processName = fmt.Sprintf("Process-%d", partition.process.pid)
+    }
+    fmt.Printf("| %-10d | %-10d | %-10s | %-15d | %-10s |\n",
+        partition.id, partition.size, state, partition.internalFragmentation, processName)
+}
 
 
 func main() {
@@ -304,6 +319,13 @@ func main() {
 			fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid)
 			fmt.Println("Esta es la cola de listos", linux.queue)
 			fmt.Println("Esta es la cola de input", cola)
+			fmt.Println("----------------------------------------------------------------------")
+			fmt.Printf("| %-10s | %-10s | %-10s | %-15s | %-10s |\n", "ID", "Size", "State", "Internal Frag.", "Process")
+			fmt.Println("------------------------------------------------------------------------")
+			printPartitionInfo(memoria.partitions[0])
+			printPartitionInfo(memoria.partitions[1])
+			printPartitionInfo(memoria.partitions[2])
+			fmt.Println("------------------------------------------------------------------------")
 
 		} else {
 			break
