@@ -111,10 +111,7 @@ func bestFit(m *Memory, p *Process, os *OS) {
 			}
 		}
 	}
-
-	fmt.Println("primaria", os.queue)
-
-
+	//fmt.Println("primaria", os.queue)
 
 	if idPartition == -1 {
 		idPartition = bestFitSwap(*m, *p)
@@ -135,17 +132,14 @@ func bestFit(m *Memory, p *Process, os *OS) {
 				}
 			}
 
-
-		fmt.Println((*os).memory.partitions[idPartition].process)
-		fmt.Println("gargante", os.queue)
+		//fmt.Println((*os).memory.partitions[idPartition].process)
+		//fmt.Println("gargante", os.queue)
 	}
-
 	// selectedPartition := &m.partitions[idPartition]
 	// selectedPartition.state = false // Ocupado
 	// selectedPartition.internalFragmentation = selectedPartition.size - p.size
 	// selectedPartition.process = *p
 	// selectedPartition.process.loaded = newLoaded
-
 	(*m).partitions[idPartition].state = false // Ocupado
 	(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
 	(*p).loaded = true
@@ -179,17 +173,28 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.time = os.time + p.time
 		os.addReady(cola)
 		p.time = 0
-		fmt.Println("Termino el proceso: ", p.pid)
+		fmt.Println("Termino el proceso: ", p.pid, "en el instante", os.time)
+
+		for index := range os.memory.partitions {
+			partition := os.memory.partitions[index] 
+			if partition.process.pid == p.pid {
+				os.memory.partitions[index].process = Process{}
+				os.memory.partitions[index].state = true
+				os.memory.partitions[index].internalFragmentation = 0
+			}
+		}
 	}
+}
+
+
+func freeMemory () {
+
 }
 
 func (p Process) isEmpty() bool {
 	return p.pid == 0 && p.time == 0 && p.arrivalTime == 0 && p.size == 0 // and loaded
 }
 
-func (m Memory) idLoaded() {
-	fmt.Printf("caragada")
-}
 
 func (os *OS) initialize(m Memory) {
 	os.memory = m
