@@ -343,6 +343,23 @@ func printStatistics(completedProcesses []Process, allProcesses []Process) {
 	fmt.Println("+" + strings.Repeat("-", 46) + "+")
 }
 
+
+func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, []Process){
+	var filteredProcesses []Process
+	var deleted []Process
+
+	for _, p := range processes {
+		if p.size <= sizeThreshold {
+			filteredProcesses = append(filteredProcesses, p)
+		} else {
+			deleted = append(deleted, p)
+		}
+	}
+
+	return filteredProcesses, deleted
+}
+
+
 func main() {
 	processes, err := ReadProcessesFromFile("ejemplo.txt")
 	if err != nil {
@@ -351,6 +368,8 @@ func main() {
 	}
 
 	var cola []Process
+
+	var del []Process
 	var linux OS
 	memoria := Memory{
 		partitions: [3]MemoryPartition{
@@ -363,6 +382,10 @@ func main() {
 	cola = append(cola, processes...)
 	cola = quicksort2(cola)
 	//fmt.Println(cola)
+
+	cola, del = filterProcessesBySize(cola, 100)
+	fmt.Println(del)
+
 
 	var input string
 	fmt.Print("Inicio del Sistema Operativo")
