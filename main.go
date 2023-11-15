@@ -124,6 +124,7 @@ func bestFit(m *Memory, p *Process, os *OS) {
 
 		currentProcess := os.memory.partitions[idPartition].process
 		currentProcess.loaded = false
+		currentProcess.time = currentProcess.time - 5
 
     // Encontrar el índice del proceso en os.queue con el mismo ID
 			for i, queueProcess := range os.queue {
