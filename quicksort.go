@@ -46,7 +46,9 @@ func ReadProcessesFromFile2(filename string) ([]Process, error) {
 			return nil, err
 		}
 
-		process := Process{pid, size, arrivalTime, time, false, 0}
+		turnaroundTime := 0
+
+		process := Process{pid, size, arrivalTime, turnaroundTime, time, false}
 		processes = append(processes, process)
 	}
 

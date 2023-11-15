@@ -21,9 +21,9 @@ type Process struct {
 	pid            int
 	size           int
 	arrivalTime    int
+	turnaroundTime int
 	time           int
 	loaded         bool
-	turnaroundTime int
 }
 
 type Processor struct {
@@ -149,7 +149,10 @@ func bestFit(m *Memory, p *Process, os *OS) {
 	(*m).partitions[idPartition].state = false // Ocupado
 	(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
 	(*p).loaded = true
-	(*p).turnaroundTime = os.time
+	if p.turnaroundTime == -1 {
+		fmt.Println(os.time)
+		(*p).turnaroundTime = os.time
+	}
 	(*m).partitions[idPartition].process = *p
 }
 
@@ -157,7 +160,6 @@ func bestFitSwap(m Memory, p Process, os OS) int {
 	var internalFragmentation int
 	var idPartition int
 	internalFragmentation = math.MaxInt
-	var currentProcess Process
 
 	for index := range m.partitions {
 		partition := m.partitions[index]
@@ -165,12 +167,9 @@ func bestFitSwap(m Memory, p Process, os OS) int {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
 				idPartition = index
-				currentProcess = partition.process
 			}
 		}
 	}
-	currentProcess.turnaroundTime = os.time - currentProcess.turnaroundTime
-	fmt.Println("SwapOpt del proceso: %d turnaroundTime %d", currentProcess.pid, currentProcess.turnaroundTime)
 	return idPartition
 }
 
@@ -184,6 +183,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.time = os.time + p.time
 		os.addReady(cola)
 		p.time = 0
+		fmt.Println(p.turnaroundTime, os.time)
 		p.turnaroundTime = os.time - p.turnaroundTime
 		fmt.Println("Termino el proceso: ", p.pid, "en el instante", os.time)
 		os.completedProcesses = append(os.completedProcesses, *p)
@@ -191,6 +191,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		for index := range os.memory.partitions {
 			partition := os.memory.partitions[index]
 			if partition.process.pid == p.pid {
+				fmt.Println(p.turnaroundTime, os.time)
 				os.memory.partitions[index].process = Process{}
 				os.memory.partitions[index].state = true
 				os.memory.partitions[index].internalFragmentation = 0
@@ -250,8 +251,11 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 			return nil, err
 		}
 
-		process := Process{pid, size, arrivalTime, time, false, 0}
+		turnaroundTime := -1
+
+		process := Process{pid, size, arrivalTime, turnaroundTime, time, false}
 		processes = append(processes, process)
+		fmt.Println(process)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -423,6 +427,8 @@ func main() {
 	}
 	fmt.Println("")
 	fmt.Println("CUADRO ESTADISTICO")
+	fmt.Println(linux.completedProcesses)
+	fmt.Println(processes)
 	printStatistics(linux.completedProcesses, processes)
 
 }
