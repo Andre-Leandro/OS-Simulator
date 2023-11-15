@@ -340,11 +340,12 @@ func main() {
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				linux.time = cola[0].arrivalTime
-				bestFit(&linux.memory, &cola[0], &linux)
+				linux.addReady(&cola)
+				bestFit(&linux.memory, &linux.queue[0], &linux)
 				//fmt.Print("leyenda")
 				//fmt.Print(*&linux.memory.partitions[2])
-				linux.processor.process = cola[0]
-				cola = append(cola[1:])
+				linux.processor.process = linux.queue[0]
+				linux.queue = append(linux.queue[1:])
 			}
 
 			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
