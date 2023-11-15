@@ -14,14 +14,16 @@ type OS struct {
 	processor Processor
 	memory    Memory
 	ReadyQueue
+	completedProcesses []Process
 }
 
 type Process struct {
-	pid         int
-	size        int
-	arrivalTime int
-	time        int
-	loaded      bool
+	pid            int
+	size           int
+	arrivalTime    int
+	time           int
+	loaded         bool
+	turnaroundTime int
 }
 
 type Processor struct {
@@ -116,7 +118,7 @@ func bestFit(m *Memory, p *Process, os *OS) {
 	//fmt.Println("primaria", os.queue)
 
 	if idPartition == -1 {
-		idPartition = bestFitSwap(*m, *p)
+		idPartition = bestFitSwap(*m, *p, *os)
 		swapOut(idPartition + 1)
 
 		//(*os).memory.partitions[idPartition].process.loaded = false\
@@ -147,13 +149,15 @@ func bestFit(m *Memory, p *Process, os *OS) {
 	(*m).partitions[idPartition].state = false // Ocupado
 	(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
 	(*p).loaded = true
+	(*p).turnaroundTime = os.time
 	(*m).partitions[idPartition].process = *p
 }
 
-func bestFitSwap(m Memory, p Process) int {
+func bestFitSwap(m Memory, p Process, os OS) int {
 	var internalFragmentation int
 	var idPartition int
 	internalFragmentation = math.MaxInt
+	var currentProcess Process
 
 	for index := range m.partitions {
 		partition := m.partitions[index]
@@ -161,9 +165,12 @@ func bestFitSwap(m Memory, p Process) int {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
 				idPartition = index
+				currentProcess = partition.process
 			}
 		}
 	}
+	currentProcess.turnaroundTime = os.time - currentProcess.turnaroundTime
+	fmt.Println("SwapOpt del proceso: %d turnaroundTime %d", currentProcess.pid, currentProcess.turnaroundTime)
 	return idPartition
 }
 
@@ -177,7 +184,9 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.time = os.time + p.time
 		os.addReady(cola)
 		p.time = 0
+		p.turnaroundTime = os.time - p.turnaroundTime
 		fmt.Println("Termino el proceso: ", p.pid, "en el instante", os.time)
+		os.completedProcesses = append(os.completedProcesses, *p)
 
 		for index := range os.memory.partitions {
 			partition := os.memory.partitions[index]
@@ -185,6 +194,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 				os.memory.partitions[index].process = Process{}
 				os.memory.partitions[index].state = true
 				os.memory.partitions[index].internalFragmentation = 0
+				break
 			}
 		}
 	}
@@ -240,7 +250,7 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 			return nil, err
 		}
 
-		process := Process{pid, size, arrivalTime, time, false}
+		process := Process{pid, size, arrivalTime, time, false, 0}
 		processes = append(processes, process)
 	}
 
@@ -291,6 +301,42 @@ func quicksort2(processes []Process) []Process {
 		}
 	}
 	return append(append(quicksort2(less), equal...), quicksort2(greater)...)
+}
+
+func printStatistics(completedProcesses []Process, allProcesses []Process) {
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	fmt.Printf("| %-4s | %-18s | %-16s |\n", "PID", "Tiempo de Retorno", "Tiempo de Espera")
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	var totalTurnaroundTime, totalWaitTime int
+
+	for _, p := range completedProcesses {
+		// Buscar el proceso correspondiente en allProcesses
+		var originalProcess Process
+		for _, originalP := range allProcesses {
+			if originalP.pid == p.pid {
+				originalProcess = originalP
+				break
+			}
+		}
+
+		waitTime := p.turnaroundTime - originalProcess.time //Poco Optimo Atte André
+		fmt.Printf("| %-4d | %-18d | %-16d |\n", p.pid, p.turnaroundTime, waitTime)
+
+		// Sumar tiempos para el cálculo promedio
+		totalTurnaroundTime += p.turnaroundTime
+		totalWaitTime += waitTime
+	}
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+
+	// Calcular promedios
+	averageTurnaroundTime := float64(totalTurnaroundTime) / float64(len(completedProcesses))
+	averageWaitTime := float64(totalWaitTime) / float64(len(completedProcesses))
+
+	// Imprimir tiempos promedio en un mini cuadro
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	fmt.Printf("| %-18s | %-23.2f |\n", "Promedio Retorno", averageTurnaroundTime)
+	fmt.Printf("| %-18s | %-23.2f |\n", "Promedio Espera", averageWaitTime)
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
 }
 
 func main() {
@@ -357,9 +403,11 @@ func main() {
 			fmt.Println("")
 			fmt.Println("------------------------------ TIME: ", linux.time, " ------------------------------")
 			fmt.Println("")
-			fmt.Println("PROCESADOR: Proceso", linux.processor.process.pid)
+			fmt.Println("PROCESADOR: Proceso ", linux.processor.process.pid)
+			fmt.Println("Tiempo de espera ", linux.processor.process.turnaroundTime)
 			fmt.Println("* Esta es la cola de listos: ", linux.queue)
 			fmt.Println("* Esta es la cola de input/nuevos: ", cola)
+			fmt.Println("* Esta es la cola de finalizados: ", linux.completedProcesses)
 			fmt.Println("")
 			fmt.Println("-----------------------------------------------------------------------")
 			fmt.Printf("| %-10s | %-10s | %-10s | %-15s | %-10s |\n", "ID", "Size", "State", "Internal Frag.", "Process")
@@ -373,5 +421,8 @@ func main() {
 			break
 		}
 	}
+	fmt.Println("")
+	fmt.Println("CUADRO ESTADISTICO")
+	printStatistics(linux.completedProcesses, processes)
 
 }
