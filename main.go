@@ -310,7 +310,7 @@ func main() {
 	(&linux).initialize(memoria)
 	cola = append(cola, processes...)
 	cola = quicksort2(cola)
-	fmt.Println(cola)
+	//fmt.Println(cola)
 
 	var input string
 	fmt.Print("Inicio del Sistema Operativo")
@@ -341,8 +341,8 @@ func main() {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				linux.time = cola[0].arrivalTime
 				bestFit(&linux.memory, &cola[0], &linux)
-				fmt.Print("leyenda")
-				fmt.Print(*&linux.memory.partitions[2])
+				//fmt.Print("leyenda")
+				//fmt.Print(*&linux.memory.partitions[2])
 				linux.processor.process = cola[0]
 				cola = append(cola[1:])
 			}
@@ -351,10 +351,13 @@ func main() {
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
-			fmt.Println("TIME: ", linux.time, "----------------------------------------------------")
-			fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid)
-			fmt.Println("Esta es la cola de listos", linux.queue)
-			fmt.Println("Esta es la cola de input/nuevos", cola)
+			fmt.Println("")
+			fmt.Println("------------------------------ TIME: ", linux.time, " ------------------------------")
+			fmt.Println("")
+			fmt.Println("PROCESADOR: Proceso", linux.processor.process.pid)
+			fmt.Println("* Esta es la cola de listos: ", linux.queue)
+			fmt.Println("* Esta es la cola de input/nuevos: ", cola)
+			fmt.Println("")
 			fmt.Println("-----------------------------------------------------------------------")
 			fmt.Printf("| %-10s | %-10s | %-10s | %-15s | %-10s |\n", "ID", "Size", "State", "Internal Frag.", "Process")
 			fmt.Println("-----------------------------------------------------------------------")
