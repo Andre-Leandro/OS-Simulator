@@ -48,6 +48,8 @@ type ReadyQueue struct {
 	queue []Process
 }
 
+var quantum = 5
+
 func swapOut(i int) {
 	fmt.Println("Se libero la particion maleta ", i)
 }
@@ -120,17 +122,19 @@ func bestFit(m *Memory, p *Process, os *OS) {
 		//(*os).memory.partitions[idPartition].process.loaded = false\
 
 		currentProcess := os.memory.partitions[idPartition].process
-		currentProcess.loaded = false
-		currentProcess.time = currentProcess.time - 5
+		// currentProcess.loaded = false
+		// currentProcess.time = currentProcess.time - quantum
 
-    // Encontrar el índice del proceso en os.queue con el mismo ID
-			for i, queueProcess := range os.queue {
-				if queueProcess.pid == currentProcess.pid {
-					// Reemplazar el proceso en os.queue con el nuevo proceso de la partición
-					os.queue[i] = currentProcess
-					break
-				}
+		// Encontrar el índice del proceso en os.queue con el mismo ID
+		for i, queueProcess := range os.queue {
+			if queueProcess.pid == currentProcess.pid {
+				currentProcess = os.queue[i]
+				currentProcess.loaded = false
+				// Reemplazar el proceso en os.queue con el nuevo proceso de la partición
+				os.queue[i] = currentProcess
+				break
 			}
+		}
 
 		//fmt.Println((*os).memory.partitions[idPartition].process)
 		//fmt.Println("gargante", os.queue)
@@ -176,7 +180,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		fmt.Println("Termino el proceso: ", p.pid, "en el instante", os.time)
 
 		for index := range os.memory.partitions {
-			partition := os.memory.partitions[index] 
+			partition := os.memory.partitions[index]
 			if partition.process.pid == p.pid {
 				os.memory.partitions[index].process = Process{}
 				os.memory.partitions[index].state = true
@@ -186,15 +190,13 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 	}
 }
 
-
-func freeMemory () {
+func freeMemory() {
 
 }
 
 func (p Process) isEmpty() bool {
 	return p.pid == 0 && p.time == 0 && p.arrivalTime == 0 && p.size == 0 // and loaded
 }
-
 
 func (os *OS) initialize(m Memory) {
 	os.memory = m
@@ -319,7 +321,7 @@ func main() {
 		fmt.Scanln(&input)
 		if input == "" {
 			if !linux.processor.process.isEmpty() {
-				linux.processor.process.timeOut(5, &linux.queue, &linux, &cola)
+				linux.processor.process.timeOut(quantum, &linux.queue, &linux, &cola)
 
 				//to not go out of bounds
 				if len(linux.queue) == 0 && len(cola) > 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
