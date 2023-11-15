@@ -112,11 +112,31 @@ func bestFit(m *Memory, p *Process, os *OS) {
 		}
 	}
 
+	fmt.Println("primaria", os.queue)
+
+
+
 	if idPartition == -1 {
 		idPartition = bestFitSwap(*m, *p)
 		swapOut(idPartition + 1)
 
-		(*os).memory.partitions[idPartition].process.loaded = false
+		//(*os).memory.partitions[idPartition].process.loaded = false\
+
+		currentProcess := os.memory.partitions[idPartition].process
+		currentProcess.loaded = false
+
+    // Encontrar el índice del proceso en os.queue con el mismo ID
+			for i, queueProcess := range os.queue {
+				if queueProcess.pid == currentProcess.pid {
+					// Reemplazar el proceso en os.queue con el nuevo proceso de la partición
+					os.queue[i] = currentProcess
+					break
+				}
+			}
+
+
+		fmt.Println((*os).memory.partitions[idPartition].process)
+		fmt.Println("gargante", os.queue)
 	}
 
 	// selectedPartition := &m.partitions[idPartition]
