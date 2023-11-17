@@ -1,95 +1,120 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
-	"os"
-	"strconv"
-	"strings"
+	"log"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/evertras/bubble-table/table"
 )
 
-func ReadProcessesFromFile2(filename string) ([]Process, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+const (
+	columnKeyName              = "name"
+	columnKeyElement           = "element"
+	columnKeyConversations     = "convos"
+	columnKeyPositiveSentiment = "positive"
+	columnKeyNegativeSentiment = "negative"
 
-	processes := []Process{}
+	colorNormal   = "#fa0"
+	colorFire     = "#f64"
+	colorElectric = "#ff0"
+	colorWater    = "#44f"
+	colorPlant    = "#8b8"
+)
 
-	scanner := bufio.NewScanner(file)
-	// Agregar una verificación para ignorar la primera línea
-	if scanner.Scan() {
-		// Ignorar la primera línea (encabezado o comentario)
-	}
+var (
+	styleSubtle = lipgloss.NewStyle().Foreground(lipgloss.Color("#888"))
 
-	for scanner.Scan() {
-		line := scanner.Text()
-		values := strings.Fields(line)
-		if len(values) != 4 {
-			return nil, fmt.Errorf("Formato de entrada invalido: %s", line)
-		}
-		pid, err := strconv.Atoi(values[0])
-		if err != nil {
-			return nil, err
-		}
-		size, err := strconv.Atoi(values[1])
-		if err != nil {
-			return nil, err
-		}
-		arrivalTime, err := strconv.Atoi(values[2])
-		if err != nil {
-			return nil, err
-		}
-		time, err := strconv.Atoi(values[3])
-		if err != nil {
-			return nil, err
-		}
+	styleBase = lipgloss.NewStyle().
+			Foreground(lipgloss.Color("#a7a")).
+			BorderForeground(lipgloss.Color("#a38")).
+			Align(lipgloss.Right)
+)
 
-		turnaroundTime := 0
-
-		process := Process{pid, size, arrivalTime, turnaroundTime, time, false}
-		processes = append(processes, process)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return processes, nil
+type Model struct {
+	pokeTable table.Model
 }
 
-func quicksort(processes []Process) []Process {
-	if len(processes) <= 1 {
-		return processes
-	}
-
-	pivotIndex := len(processes) / 2
-	pivot := processes[pivotIndex]
-
-	var less []Process
-	var greater []Process
-	var equal []Process
-
-	for _, p := range processes {
-		if p.arrivalTime < pivot.arrivalTime {
-			less = append(less, p)
-		} else if p.arrivalTime > pivot.arrivalTime {
-			greater = append(greater, p)
-		} else {
-			equal = append(equal, p)
-		}
-	}
-	return append(append(quicksort(less), equal...), quicksort(greater)...)
+func makeRow(name, element, colorStr string, numConversations int, positiveSentiment, negativeSentiment float32) table.Row {
+	return table.NewRow(table.RowData{
+		columnKeyName:              name,
+		columnKeyElement:           table.NewStyledCell(element, lipgloss.NewStyle().Foreground(lipgloss.Color(colorStr))),
+		columnKeyConversations:     numConversations,
+		columnKeyPositiveSentiment: positiveSentiment,
+		columnKeyNegativeSentiment: negativeSentiment,
+	})
 }
 
-func main2() {
-	processes, err := ReadProcessesFromFile("ejemplo.txt")
-	if err != nil {
-		fmt.Println("Error:", err)
-		return
+func NewModel() Model {
+	return Model{
+		pokeTable: table.New([]table.Column{
+			table.NewColumn(columnKeyName, "Name", 13),
+			table.NewColumn(columnKeyElement, "Element", 10),
+			table.NewColumn(columnKeyConversations, "# Conversations", 15),
+			table.NewColumn(columnKeyPositiveSentiment, ":D %", 6).
+				WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#8c8"))).
+				WithFormatString("%.1f%%"),
+			table.NewColumn(columnKeyNegativeSentiment, ":( %", 6).
+				WithStyle(lipgloss.NewStyle().Foreground(lipgloss.Color("#c88"))).
+				WithFormatString("%.1f%%"),
+		}).WithRows([]table.Row{
+			makeRow("Pikachu", "Electric", colorElectric, 2300648, 21.9, 8.54),
+			makeRow("Eevee", "Normal", colorNormal, 636373, 26.4, 7.37),
+			makeRow("Bulbasaur", "Plant", colorPlant, 352190, 25.7, 9.02),
+			makeRow("Squirtle", "Water", colorWater, 241259, 25.6, 5.96),
+			makeRow("Blastoise", "Water", colorWater, 162794, 19.5, 6.04),
+			makeRow("Charmander", "Fire", colorFire, 265760, 31.2, 5.25),
+			makeRow("Charizard", "Fire", colorFire, 567763, 25.6, 7.56),
+		}).
+			BorderRounded().
+			WithBaseStyle(styleBase).
+			WithPageSize(6).
+			SortByDesc(columnKeyConversations).
+			Focused(true),
+	}
+}
+
+func (m Model) Init() tea.Cmd {
+	return nil
+}
+
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var (
+		cmd  tea.Cmd
+		cmds []tea.Cmd
+	)
+
+	m.pokeTable, cmd = m.pokeTable.Update(msg)
+	cmds = append(cmds, cmd)
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c", "esc", "q":
+			cmds = append(cmds, tea.Quit)
+		}
 	}
 
-	pepe := quicksort(processes)
-	fmt.Println(pepe)
+	return m, tea.Batch(cmds...)
+}
+
+func (m Model) View() string {
+	selected := m.pokeTable.HighlightedRow().Data[columnKeyName].(string)
+	view := lipgloss.JoinVertical(
+		lipgloss.Left,
+		styleSubtle.Render("Press q or ctrl+c to quit - Sorted by # Conversations"),
+		styleSubtle.Render("Highlighted: "+selected),
+		styleSubtle.Render("https://www.nintendolife.com/news/2021/11/these-are-the-most-loved-and-most-hated-pokemon-according-to-a-new-study"),
+		m.pokeTable.View(),
+	) + "\n"
+
+	return lipgloss.NewStyle().MarginLeft(1).Render(view)
+}
+
+func main() {
+	p := tea.NewProgram(NewModel())
+
+	if err := p.Start(); err != nil {
+		log.Fatal(err)
+	}
 }
