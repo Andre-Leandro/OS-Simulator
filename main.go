@@ -265,7 +265,8 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 	return processes, nil
 }
 
-func printPartitionInfo(partition MemoryPartition) {
+func printPartitionInfo(memoria Memory) {
+	partition := memoria.partitions[0]
 	state := "Occupied"
 	if partition.state {
 		state = "Free"
@@ -435,12 +436,8 @@ func main() {
 			fmt.Println("* Esta es la cola de input/nuevos: ", cola)
 			fmt.Println("* Esta es la cola de finalizados: ", linux.completedProcesses)
 			fmt.Println("")
-			fmt.Println("-----------------------------------------------------------------------")
-			fmt.Printf("| %-10s | %-10s | %-10s | %-15s | %-10s |\n", "ID", "Size", "State", "Internal Frag.", "Process")
-			fmt.Println("-----------------------------------------------------------------------")
-			printPartitionInfo(linux.memory.partitions[0])
-			printPartitionInfo(linux.memory.partitions[1])
-			printPartitionInfo(linux.memory.partitions[2])
+			mostrarDatos(linux.memory)
+
 			fmt.Println("-----------------------------------------------------------------------")
 
 		} else {
