@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -135,8 +134,6 @@ func (m Model) View() string {
 }
 
 func arrancar(completedProcesses []Process, allProcesses []Process) {
-	fmt.Println("hola")
-
 	p := tea.NewProgram(NewModelStats(completedProcesses, allProcesses))
 
 	go func() {

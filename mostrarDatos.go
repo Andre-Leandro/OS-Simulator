@@ -100,7 +100,6 @@ func NewModelShowData(memoria Memory) Model {
 } */
 
 func mostrarDatos(memoria Memory) {
-	fmt.Println("hola")
 
 	p := tea.NewProgram(NewModelShowData(memoria))
 
