@@ -308,6 +308,8 @@ func quicksort2(processes []Process) []Process {
 }
 
 func printStatistics(completedProcesses []Process, allProcesses []Process) {
+	arrancar(completedProcesses, allProcesses)
+
 	fmt.Println("+" + strings.Repeat("-", 46) + "+")
 	fmt.Printf("| %-4s | %-18s | %-16s |\n", "PID", "Tiempo de Retorno", "Tiempo de Espera")
 	fmt.Println("+" + strings.Repeat("-", 46) + "+")
@@ -343,8 +345,7 @@ func printStatistics(completedProcesses []Process, allProcesses []Process) {
 	fmt.Println("+" + strings.Repeat("-", 46) + "+")
 }
 
-
-func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, []Process){
+func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, []Process) {
 	var filteredProcesses []Process
 	var deleted []Process
 
@@ -359,9 +360,8 @@ func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, [
 	return filteredProcesses, deleted
 }
 
-
 func main() {
-	processes, err := ReadProcessesFromFile("ejemplo.txt")
+	processes, err := ReadProcessesFromFile("ejemplo2.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -385,7 +385,6 @@ func main() {
 
 	cola, del = filterProcessesBySize(cola, 100)
 	fmt.Println(del)
-
 
 	var input string
 	fmt.Print("Inicio del Sistema Operativo")
