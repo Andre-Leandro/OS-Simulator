@@ -14,14 +14,16 @@ type OS struct {
 	processor Processor
 	memory    Memory
 	ReadyQueue
+	completedProcesses []Process
 }
 
 type Process struct {
-	pid         int
-	size        int
-	arrivalTime int
-	time        int
-	loaded      bool
+	pid            int
+	size           int
+	arrivalTime    int
+	turnaroundTime int
+	time           int
+	loaded         bool
 }
 
 type Processor struct {
@@ -48,19 +50,14 @@ type ReadyQueue struct {
 	queue []Process
 }
 
-func (q ReadyQueue) estado() {
-	fmt.Println(q.queue)
-}
+var quantum = 5
 
 func swapOut(i int) {
-	fmt.Println("Se libero la particion", i)
+	fmt.Println("Se libero la particion maleta ", i)
 }
 
 func (os *OS) addReady(l *[]Process) {
 	copy := *l
-
-	fmt.Println(os.queue)
-	fmt.Println(len(os.queue))
 
 	for index := range copy {
 		if len(os.queue) == 4 {
@@ -103,14 +100,14 @@ func bestFitLazy(m Memory, p Process) {
 	}
 }
 
-func bestFit(m *Memory, p *Process) {
+func bestFit(m *Memory, p *Process, os *OS) {
 	var internalFragmentation int
 	var idPartition int
 	idPartition = -1
 	internalFragmentation = math.MaxInt
 
 	for index := range m.partitions {
-		partition := m.partitions[index]
+		partition := (*m).partitions[index] // Obtener una referencia a la partición real en la estructura Memory
 		if partition.state && partition.size >= p.size {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
@@ -118,19 +115,48 @@ func bestFit(m *Memory, p *Process) {
 			}
 		}
 	}
+	//fmt.Println("primaria", os.queue)
+
 	if idPartition == -1 {
-		idPartition = bestFitSwap(*m, *p)
-		swapOut(idPartition)
-		m.partitions[idPartition].process.loaded = false
+		idPartition = bestFitSwap(*m, *p, *os)
+		swapOut(idPartition + 1)
+
+		//(*os).memory.partitions[idPartition].process.loaded = false\
+
+		currentProcess := os.memory.partitions[idPartition].process
+		// currentProcess.loaded = false
+		// currentProcess.time = currentProcess.time - quantum
+
+		// Encontrar el índice del proceso en os.queue con el mismo ID
+		for i, queueProcess := range os.queue {
+			if queueProcess.pid == currentProcess.pid {
+				currentProcess = os.queue[i]
+				currentProcess.loaded = false
+				// Reemplazar el proceso en os.queue con el nuevo proceso de la partición
+				os.queue[i] = currentProcess
+				break
+			}
+		}
+
+		//fmt.Println((*os).memory.partitions[idPartition].process)
+		//fmt.Println("gargante", os.queue)
 	}
-	selectedPartition := &m.partitions[idPartition]
-	selectedPartition.state = false
-	selectedPartition.internalFragmentation = selectedPartition.size - p.size
-	p.loaded = true
-	selectedPartition.process = *p
+	// selectedPartition := &m.partitions[idPartition]
+	// selectedPartition.state = false // Ocupado
+	// selectedPartition.internalFragmentation = selectedPartition.size - p.size
+	// selectedPartition.process = *p
+	// selectedPartition.process.loaded = newLoaded
+	(*m).partitions[idPartition].state = false // Ocupado
+	(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
+	(*p).loaded = true
+	if p.turnaroundTime == -1 {
+		fmt.Println(os.time)
+		(*p).turnaroundTime = os.time
+	}
+	(*m).partitions[idPartition].process = *p
 }
 
-func bestFitSwap(m Memory, p Process) int {
+func bestFitSwap(m Memory, p Process, os OS) int {
 	var internalFragmentation int
 	var idPartition int
 	internalFragmentation = math.MaxInt
@@ -157,34 +183,30 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.time = os.time + p.time
 		os.addReady(cola)
 		p.time = 0
-		fmt.Println("Termino el proceso: ", p.pid)
-	}
-}
+		fmt.Println(p.turnaroundTime, os.time)
+		p.turnaroundTime = os.time - p.turnaroundTime
+		fmt.Println("Termino el proceso: ", p.pid, "en el instante", os.time)
+		os.completedProcesses = append(os.completedProcesses, *p)
 
-func sort(input ReadyQueue) {
-	for i := range input.queue {
-		fmt.Print("este es el numero ", i)
-		for j := range input.queue[i:] {
-			fmt.Print(j+i, " - ")
-
+		for index := range os.memory.partitions {
+			partition := os.memory.partitions[index]
+			if partition.process.pid == p.pid {
+				fmt.Println(p.turnaroundTime, os.time)
+				os.memory.partitions[index].process = Process{}
+				os.memory.partitions[index].state = true
+				os.memory.partitions[index].internalFragmentation = 0
+				break
+			}
 		}
-		fmt.Println("")
 	}
 }
 
-func (p *Process) Escribir() {
-	p.pid = 5
-	fmt.Println(p.time)
-}
+func freeMemory() {
 
-var a NewQueue
+}
 
 func (p Process) isEmpty() bool {
 	return p.pid == 0 && p.time == 0 && p.arrivalTime == 0 && p.size == 0 // and loaded
-}
-
-func (m Memory) idLoaded() {
-	fmt.Printf("caragada")
 }
 
 func (os *OS) initialize(m Memory) {
@@ -229,8 +251,11 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 			return nil, err
 		}
 
-		process := Process{pid, size, arrivalTime, time, false}
+		turnaroundTime := -1
+
+		process := Process{pid, size, arrivalTime, turnaroundTime, time, false}
 		processes = append(processes, process)
+		fmt.Println(process)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -240,6 +265,101 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 	return processes, nil
 }
 
+func printPartitionInfo(partition MemoryPartition) {
+	state := "Occupied"
+	if partition.state {
+		state = "Free"
+	}
+	processName := "N/A"
+	if partition.process.pid != 0 {
+		processName = fmt.Sprintf("Process-%d", partition.process.pid)
+	}
+	fmt.Printf("| %-10d | %-10d | %-10s | %-15d | %-10s |\n",
+		partition.id, partition.size, state, partition.internalFragmentation, processName)
+}
+
+func quicksort2(processes []Process) []Process {
+	if len(processes) <= 1 {
+		return processes
+	}
+
+	pivotIndex := len(processes) / 2
+	pivot := processes[pivotIndex]
+	var less []Process
+	var greater []Process
+	var equal []Process
+
+	for _, p := range processes {
+		if p.arrivalTime < pivot.arrivalTime {
+			less = append(less, p)
+		} else if p.arrivalTime > pivot.arrivalTime {
+			greater = append(greater, p)
+		} else {
+			if p.pid < pivot.pid {
+				less = append(less, p)
+			} else if p.pid > pivot.pid {
+				greater = append(greater, p)
+			} else {
+				equal = append(equal, p)
+			}
+		}
+	}
+	return append(append(quicksort2(less), equal...), quicksort2(greater)...)
+}
+
+func printStatistics(completedProcesses []Process, allProcesses []Process) {
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	fmt.Printf("| %-4s | %-18s | %-16s |\n", "PID", "Tiempo de Retorno", "Tiempo de Espera")
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	var totalTurnaroundTime, totalWaitTime int
+
+	for _, p := range completedProcesses {
+		// Buscar el proceso correspondiente en allProcesses
+		var originalProcess Process
+		for _, originalP := range allProcesses {
+			if originalP.pid == p.pid {
+				originalProcess = originalP
+				break
+			}
+		}
+
+		waitTime := p.turnaroundTime - originalProcess.time //Poco Optimo Atte André
+		fmt.Printf("| %-4d | %-18d | %-16d |\n", p.pid, p.turnaroundTime, waitTime)
+
+		// Sumar tiempos para el cálculo promedio
+		totalTurnaroundTime += p.turnaroundTime
+		totalWaitTime += waitTime
+	}
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+
+	// Calcular promedios
+	averageTurnaroundTime := float64(totalTurnaroundTime) / float64(len(completedProcesses))
+	averageWaitTime := float64(totalWaitTime) / float64(len(completedProcesses))
+
+	// Imprimir tiempos promedio en un mini cuadro
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+	fmt.Printf("| %-18s | %-23.2f |\n", "Promedio Retorno", averageTurnaroundTime)
+	fmt.Printf("| %-18s | %-23.2f |\n", "Promedio Espera", averageWaitTime)
+	fmt.Println("+" + strings.Repeat("-", 46) + "+")
+}
+
+
+func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, []Process){
+	var filteredProcesses []Process
+	var deleted []Process
+
+	for _, p := range processes {
+		if p.size <= sizeThreshold {
+			filteredProcesses = append(filteredProcesses, p)
+		} else {
+			deleted = append(deleted, p)
+		}
+	}
+
+	return filteredProcesses, deleted
+}
+
+
 func main() {
 	processes, err := ReadProcessesFromFile("ejemplo.txt")
 	if err != nil {
@@ -248,7 +368,9 @@ func main() {
 	}
 
 	var cola []Process
-	linux := new(OS)
+
+	var del []Process
+	var linux OS
 	memoria := Memory{
 		partitions: [3]MemoryPartition{
 			{id: 1, size: 100, state: true},
@@ -256,17 +378,23 @@ func main() {
 			{id: 3, size: 35, state: true},
 		},
 	}
-	linux.initialize(memoria)
-
+	(&linux).initialize(memoria)
 	cola = append(cola, processes...)
+	cola = quicksort2(cola)
+	//fmt.Println(cola)
+
+	cola, del = filterProcessesBySize(cola, 100)
+	fmt.Println(del)
+
+
 	var input string
-	fmt.Print("Inicio del Sistema Operativo, presione enter para continuar")
+	fmt.Print("Inicio del Sistema Operativo")
 
 	for {
 		fmt.Scanln(&input)
 		if input == "" {
 			if !linux.processor.process.isEmpty() {
-				linux.processor.process.timeOut(2, &linux.queue, linux, &cola)
+				linux.processor.process.timeOut(quantum, &linux.queue, &linux, &cola)
 
 				//to not go out of bounds
 				if len(linux.queue) == 0 && len(cola) > 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
@@ -278,7 +406,7 @@ func main() {
 					break
 				}
 				if linux.queue[0].loaded == false {
-					bestFit(&linux.memory, &linux.queue[0])
+					bestFit(&linux.memory, &linux.queue[0], &linux)
 				}
 				linux.processor.process = linux.queue[0]
 				linux.queue = append(linux.queue[1:])
@@ -287,23 +415,43 @@ func main() {
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
 				linux.time = cola[0].arrivalTime
-				bestFit(&linux.memory, &cola[0])
-				linux.processor.process = cola[0]
-				cola = append(cola[1:])
+				linux.addReady(&cola)
+				bestFit(&linux.memory, &linux.queue[0], &linux)
+				//fmt.Print("leyenda")
+				//fmt.Print(*&linux.memory.partitions[2])
+				linux.processor.process = linux.queue[0]
+				linux.queue = append(linux.queue[1:])
 			}
 
 			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
-			fmt.Println("TIME: ", linux.time, "----------------------------------------------------")
-			fmt.Println("El proceso que se encuentra en el procesador es: pid", linux.processor.process.pid)
-			fmt.Println("Esta es la cola de listos", linux.queue)
-			fmt.Println("Esta es la cola de input", cola)
+			fmt.Println("")
+			fmt.Println("------------------------------ TIME: ", linux.time, " ------------------------------")
+			fmt.Println("")
+			fmt.Println("PROCESADOR: Proceso ", linux.processor.process.pid)
+			fmt.Println("Tiempo de espera ", linux.processor.process.turnaroundTime)
+			fmt.Println("* Esta es la cola de listos: ", linux.queue)
+			fmt.Println("* Esta es la cola de input/nuevos: ", cola)
+			fmt.Println("* Esta es la cola de finalizados: ", linux.completedProcesses)
+			fmt.Println("")
+			fmt.Println("-----------------------------------------------------------------------")
+			fmt.Printf("| %-10s | %-10s | %-10s | %-15s | %-10s |\n", "ID", "Size", "State", "Internal Frag.", "Process")
+			fmt.Println("-----------------------------------------------------------------------")
+			printPartitionInfo(linux.memory.partitions[0])
+			printPartitionInfo(linux.memory.partitions[1])
+			printPartitionInfo(linux.memory.partitions[2])
+			fmt.Println("-----------------------------------------------------------------------")
 
 		} else {
 			break
 		}
 	}
+	fmt.Println("")
+	fmt.Println("CUADRO ESTADISTICO")
+	fmt.Println(linux.completedProcesses)
+	fmt.Println(processes)
+	printStatistics(linux.completedProcesses, processes)
 
 }
