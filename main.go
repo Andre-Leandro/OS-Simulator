@@ -53,7 +53,7 @@ type ReadyQueue struct {
 var quantum = 5
 
 func swapOut(i int) {
-	fmt.Println("Se libero la particion maleta ", i)
+	fmt.Println("Se libero la particion numero ", i)
 }
 
 func (os *OS) addReady(l *[]Process) {
@@ -150,7 +150,6 @@ func bestFit(m *Memory, p *Process, os *OS) {
 	(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
 	(*p).loaded = true
 	if p.turnaroundTime == -1 {
-		fmt.Println(os.time)
 		(*p).turnaroundTime = os.time
 	}
 	(*m).partitions[idPartition].process = *p
@@ -183,7 +182,6 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.time = os.time + p.time
 		os.addReady(cola)
 		p.time = 0
-		fmt.Println(p.turnaroundTime, os.time)
 		p.turnaroundTime = os.time - p.turnaroundTime
 		fmt.Println("Termino el proceso: ", p.pid, "en el instante", os.time)
 		os.completedProcesses = append(os.completedProcesses, *p)
@@ -191,7 +189,6 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		for index := range os.memory.partitions {
 			partition := os.memory.partitions[index]
 			if partition.process.pid == p.pid {
-				fmt.Println(p.turnaroundTime, os.time)
 				os.memory.partitions[index].process = Process{}
 				os.memory.partitions[index].state = true
 				os.memory.partitions[index].internalFragmentation = 0
@@ -255,7 +252,6 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 
 		process := Process{pid, size, arrivalTime, turnaroundTime, time, false}
 		processes = append(processes, process)
-		fmt.Println(process)
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -265,7 +261,8 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 	return processes, nil
 }
 
-func printPartitionInfo(partition MemoryPartition) {
+/* func printPartitionInfo(memoria Memory) {
+	partition := memoria.partitions[0]
 	state := "Occupied"
 	if partition.state {
 		state = "Free"
@@ -276,7 +273,7 @@ func printPartitionInfo(partition MemoryPartition) {
 	}
 	fmt.Printf("| %-10d | %-10d | %-10s | %-15d | %-10s |\n",
 		partition.id, partition.size, state, partition.internalFragmentation, processName)
-}
+} */
 
 func quicksort2(processes []Process) []Process {
 	if len(processes) <= 1 {
@@ -307,7 +304,8 @@ func quicksort2(processes []Process) []Process {
 	return append(append(quicksort2(less), equal...), quicksort2(greater)...)
 }
 
-func printStatistics(completedProcesses []Process, allProcesses []Process) {
+/* func printStatistics(completedProcesses []Process, allProcesses []Process) {
+
 	fmt.Println("+" + strings.Repeat("-", 46) + "+")
 	fmt.Printf("| %-4s | %-18s | %-16s |\n", "PID", "Tiempo de Retorno", "Tiempo de Espera")
 	fmt.Println("+" + strings.Repeat("-", 46) + "+")
@@ -341,10 +339,9 @@ func printStatistics(completedProcesses []Process, allProcesses []Process) {
 	fmt.Printf("| %-18s | %-23.2f |\n", "Promedio Retorno", averageTurnaroundTime)
 	fmt.Printf("| %-18s | %-23.2f |\n", "Promedio Espera", averageWaitTime)
 	fmt.Println("+" + strings.Repeat("-", 46) + "+")
-}
+} */
 
-
-func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, []Process){
+func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, []Process) {
 	var filteredProcesses []Process
 	var deleted []Process
 
@@ -359,9 +356,8 @@ func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, [
 	return filteredProcesses, deleted
 }
 
-
 func main() {
-	processes, err := ReadProcessesFromFile("ejemplo.txt")
+	processes, err := ReadProcessesFromFile("ejemplo2.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
@@ -369,7 +365,7 @@ func main() {
 
 	var cola []Process
 
-	var del []Process
+	/* var del []Process */
 	var linux OS
 	memoria := Memory{
 		partitions: [3]MemoryPartition{
@@ -383,9 +379,8 @@ func main() {
 	cola = quicksort2(cola)
 	//fmt.Println(cola)
 
-	cola, del = filterProcessesBySize(cola, 100)
-	fmt.Println(del)
-
+	cola, _ = filterProcessesBySize(cola, 100)
+	/* fmt.Println(del) */
 
 	var input string
 	fmt.Print("Inicio del Sistema Operativo")
@@ -427,21 +422,14 @@ func main() {
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
-			fmt.Println("")
-			fmt.Println("------------------------------ TIME: ", linux.time, " ------------------------------")
-			fmt.Println("")
+			fmt.Println("\n", "------------------------------ TIME: ", linux.time, " ------------------------------", "\n")
 			fmt.Println("PROCESADOR: Proceso ", linux.processor.process.pid)
 			fmt.Println("Tiempo de espera ", linux.processor.process.turnaroundTime)
 			fmt.Println("* Esta es la cola de listos: ", linux.queue)
 			fmt.Println("* Esta es la cola de input/nuevos: ", cola)
-			fmt.Println("* Esta es la cola de finalizados: ", linux.completedProcesses)
-			fmt.Println("")
-			fmt.Println("-----------------------------------------------------------------------")
-			fmt.Printf("| %-10s | %-10s | %-10s | %-15s | %-10s |\n", "ID", "Size", "State", "Internal Frag.", "Process")
-			fmt.Println("-----------------------------------------------------------------------")
-			printPartitionInfo(linux.memory.partitions[0])
-			printPartitionInfo(linux.memory.partitions[1])
-			printPartitionInfo(linux.memory.partitions[2])
+			fmt.Println("* Esta es la cola de finalizados: ", linux.completedProcesses, "\n")
+			mostrarDatos(linux.memory)
+
 			fmt.Println("-----------------------------------------------------------------------")
 
 		} else {
@@ -450,8 +438,6 @@ func main() {
 	}
 	fmt.Println("")
 	fmt.Println("CUADRO ESTADISTICO")
-	fmt.Println(linux.completedProcesses)
-	fmt.Println(processes)
-	printStatistics(linux.completedProcesses, processes)
+	arrancar(linux.completedProcesses, processes)
 
 }
