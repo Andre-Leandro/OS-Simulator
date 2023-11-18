@@ -30,9 +30,9 @@ func NewModelShowData(memoria Memory) Model {
 
 	// Crear columnas con estilo base
 	columns := []table.Column{
-		table.NewColumn(columnKeySize, "Tamaño", 20).WithStyle(styleBase),
-		table.NewColumn(columnKeyState, "Estado", 20).WithStyle(styleBase),
-		table.NewColumn(columnKeyInternalFragmentation, "Fragmentacion Interna", 20).WithStyle(styleBase),
+		table.NewColumn(columnKeySize, "Tamaño", 15).WithStyle(styleBase),
+		table.NewColumn(columnKeyState, "Estado", 15).WithStyle(styleBase),
+		table.NewColumn(columnKeyInternalFragmentation, "Fragmentacion Interna", 25).WithStyle(styleBase),
 		table.NewColumn(columnKeyProcess, "Proceso", 20).WithStyle(styleBase),
 	}
 
@@ -43,14 +43,14 @@ func NewModelShowData(memoria Memory) Model {
 		partition := memoria.partitions[i]
 		colorState := "#f64"
 
-		state := "Occupied"
+		state := "Ocupado"
 		if partition.state {
-			state = "Free"
+			state = "Libre"
 			colorState = "#8b8"
 		}
-		processName := "N/A"
+		processName := "-"
 		if partition.process.pid != 0 {
-			processName = fmt.Sprintf("Process-%d", partition.process.pid)
+			processName = fmt.Sprintf("Proceso-%d", partition.process.pid)
 		}
 
 		coloredState := lipgloss.NewStyle().

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"math"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -64,8 +65,8 @@ func NewModelStats(completedProcesses []Process, allProcesses []Process) Model {
 		totalWaitTime += waitTime
 	}
 	// Calcular promedios
-	averageTurnaroundTime = float64(totalTurnaroundTime) / float64(len(completedProcesses))
-	averageWaitTime = float64(totalWaitTime) / float64(len(completedProcesses))
+	averageTurnaroundTime = math.Round((float64(totalTurnaroundTime)/float64(len(completedProcesses)))*100) / 100
+	averageWaitTime = math.Round((float64(totalWaitTime)/float64(len(completedProcesses)))*100) / 100
 
 	return Model{
 		tabla: table.New(columns).

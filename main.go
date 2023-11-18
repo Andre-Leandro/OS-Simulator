@@ -50,7 +50,8 @@ type ReadyQueue struct {
 	queue []Process
 }
 
-var quantum = 5
+const quantum = 2
+const biggestPartition = 250
 
 func swapOut(i int) {
 	fmt.Println("Se libero la particion numero ", i)
@@ -183,7 +184,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.addReady(cola)
 		p.time = 0
 		p.turnaroundTime = os.time - p.turnaroundTime
-		fmt.Println("Termino el proceso: ", p.pid, "en el instante", os.time)
+		fmt.Println("Termino el proceso:", p.pid, "en el instante", os.time)
 		os.completedProcesses = append(os.completedProcesses, *p)
 
 		for index := range os.memory.partitions {
@@ -356,6 +357,23 @@ func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, [
 	return filteredProcesses, deleted
 }
 
+func mostrarColas(processes []Process) {
+	if len(processes) == 0 {
+		fmt.Println("-")
+		fmt.Println("\n")
+		return
+	}
+
+	for i, p := range processes {
+		if i == 0 {
+			fmt.Print(p.pid)
+		} else {
+			fmt.Print(", ", p.pid)
+		}
+	}
+	fmt.Println("\n")
+}
+
 func main() {
 	processes, err := ReadProcessesFromFile("ejemplo2.txt")
 	if err != nil {
@@ -369,9 +387,9 @@ func main() {
 	var linux OS
 	memoria := Memory{
 		partitions: [3]MemoryPartition{
-			{id: 1, size: 100, state: true},
-			{id: 2, size: 75, state: true},
-			{id: 3, size: 35, state: true},
+			{id: 1, size: 250, state: true},
+			{id: 2, size: 120, state: true},
+			{id: 3, size: 60, state: true},
 		},
 	}
 	(&linux).initialize(memoria)
@@ -379,7 +397,7 @@ func main() {
 	cola = quicksort2(cola)
 	//fmt.Println(cola)
 
-	cola, _ = filterProcessesBySize(cola, 100)
+	cola, _ = filterProcessesBySize(cola, biggestPartition)
 	/* fmt.Println(del) */
 
 	var input string
@@ -422,15 +440,17 @@ func main() {
 				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
-			fmt.Println("\n", "------------------------------ TIME: ", linux.time, " ------------------------------", "\n")
-			fmt.Println("PROCESADOR: Proceso ", linux.processor.process.pid)
-			fmt.Println("Tiempo de espera ", linux.processor.process.turnaroundTime)
-			fmt.Println("* Esta es la cola de listos: ", linux.queue)
-			fmt.Println("* Esta es la cola de input/nuevos: ", cola)
-			fmt.Println("* Esta es la cola de finalizados: ", linux.completedProcesses, "\n")
+			fmt.Println("\n", "------------------------------------ TIEMPO: ", linux.time, " ------------------------------------", "\n")
 			mostrarDatos(linux.memory)
+			fmt.Println("\n", "PROCESADOR: Proceso ", linux.processor.process.pid)
+			fmt.Print("* Esta es la cola de listos: ")
+			mostrarColas(linux.queue)
+			fmt.Print("* Esta es la cola de input/nuevos: ")
+			mostrarColas(cola)
+			fmt.Print("* Esta es la cola de finalizados: ")
+			mostrarColas(linux.completedProcesses)
 
-			fmt.Println("-----------------------------------------------------------------------")
+			fmt.Println("--------------------------------------------------------------------------------------")
 
 		} else {
 			break
