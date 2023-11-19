@@ -184,7 +184,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.addReady(cola)
 		p.time = 0
 		p.turnaroundTime = os.time - p.turnaroundTime
-		fmt.Println("Termino el proceso:", p.pid, "en el instante", os.time)
+		fmt.Println("\n", "Termino el proceso:", p.pid, "en el instante", os.time, "\n")
 		os.completedProcesses = append(os.completedProcesses, *p)
 
 		for index := range os.memory.partitions {
@@ -437,7 +437,7 @@ func main() {
 			}
 
 			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
-				fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
+				fmt.Println("\n", "Se termino de procesar todo - Fin de la Simulacion", "\n")
 				break
 			}
 			fmt.Println("\n", "------------------------------------ TIEMPO: ", linux.time, " ------------------------------------", "\n")
@@ -446,22 +446,22 @@ func main() {
 			mostrarDatos(linux.memory, linux.processor.process)
 			fmt.Print("\n")
 			mostrarColaListos(linux.queue)
-			fmt.Print("\n")
-			fmt.Print("* Esta es la cola de listos: ")
-			mostrarColas(linux.queue)
-			fmt.Print("* Esta es la cola de input/nuevos: ")
-			mostrarColas(cola)
-			fmt.Print("* Esta es la cola de finalizados: ")
-			mostrarColas(linux.completedProcesses)
 
-			fmt.Println("--------------------------------------------------------------------------------------")
+			/* 			fmt.Print("* Esta es la cola de listos: ")
+			   			mostrarColas(linux.queue)
+			   			fmt.Print("* Esta es la cola de input/nuevos: ")
+			   			mostrarColas(cola)
+			   			fmt.Print("* Esta es la cola de finalizados: ")
+			   			mostrarColas(linux.completedProcesses) */
+
+			fmt.Println("\n", "-------------------------------------------------------------------------------------")
 
 		} else {
 			break
 		}
 	}
-	fmt.Println("")
-	fmt.Println("CUADRO ESTADISTICO")
+
+	fmt.Println("\n", "CUADRO ESTADISTICO")
 	arrancar(linux.completedProcesses, processes)
 
 }

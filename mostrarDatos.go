@@ -138,16 +138,23 @@ func NewModelShowReadyQueue(colaListos []Process) Model {
 		for i, _ := range colaListos {
 
 			loaded := "Disco"
+			colorLoaded := "#DC7633"
+
 			if colaListos[i].loaded {
 				loaded = "Memoria"
+				colorLoaded = "#F4D03F"
 			}
+
+			coloredLoaded := lipgloss.NewStyle().
+				Foreground(lipgloss.Color(colorLoaded)).
+				Render(loaded)
 
 			row := table.NewRow(table.RowData{
 				columnKeyPid:         colaListos[i].pid,
 				columnKeySize:        colaListos[i].size,
 				columnKeyArrivalTime: colaListos[i].arrivalTime,
 				columnKeyTime:        colaListos[i].time,
-				columnKeyLoaded:      loaded,
+				columnKeyLoaded:      coloredLoaded,
 			})
 			allRows = append(allRows, row)
 
