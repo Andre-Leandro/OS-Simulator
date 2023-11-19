@@ -115,11 +115,11 @@ func NewModelShowProcessInProcessor(proceso Process) Model {
 func NewModelShowReadyQueue(colaListos []Process) Model {
 	// Crear columnas con estilo base
 	columns := []table.Column{
-		table.NewColumn(columnKeyPid, "Pid", 6).WithStyle(styleBase),
-		table.NewColumn(columnKeySize, "Tamaño (Kb)", 15).WithStyle(styleBase),
-		table.NewColumn(columnKeyArrivalTime, "Tiempo de Arribo", 25).WithStyle(styleBase),
-		table.NewColumn(columnKeyTime, "Tiempo", 14).WithStyle(styleBase),
-		table.NewColumn(columnKeyLoaded, "Cargado", 14).WithStyle(styleBase),
+		table.NewColumn(columnKeyPid, "Pid", 9).WithStyle(styleBase),
+		table.NewColumn(columnKeyArrivalTime, "Tiempo de Arribo", 21).WithStyle(styleBase),
+		table.NewColumn(columnKeySize, " Tamaño (Kb)", 13).WithStyle(styleBase),
+		table.NewColumn(columnKeyTime, "Tiempo", 11).WithStyle(styleBase),
+		table.NewColumn(columnKeyLoaded, "Cargado", 20).WithStyle(styleBase),
 	}
 
 	// Crear filas con datos de todos los procesos
@@ -128,8 +128,8 @@ func NewModelShowReadyQueue(colaListos []Process) Model {
 	if len(colaListos) == 0 {
 		row := table.NewRow(table.RowData{
 			columnKeyPid:         "-",
-			columnKeySize:        "-",
 			columnKeyArrivalTime: "-",
+			columnKeySize:        "-",
 			columnKeyTime:        "-",
 			columnKeyLoaded:      "-",
 		})
@@ -151,8 +151,8 @@ func NewModelShowReadyQueue(colaListos []Process) Model {
 
 			row := table.NewRow(table.RowData{
 				columnKeyPid:         colaListos[i].pid,
-				columnKeySize:        colaListos[i].size,
 				columnKeyArrivalTime: colaListos[i].arrivalTime,
+				columnKeySize:        colaListos[i].size,
 				columnKeyTime:        colaListos[i].time,
 				columnKeyLoaded:      coloredLoaded,
 			})

@@ -454,7 +454,7 @@ func main() {
 			   			fmt.Print("* Esta es la cola de finalizados: ")
 			   			mostrarColas(linux.completedProcesses) */
 
-			fmt.Println("\n", "-------------------------------------------------------------------------------------")
+			fmt.Println("\n", "--------------------------------------------------------------------------------------")
 
 		} else {
 			break
