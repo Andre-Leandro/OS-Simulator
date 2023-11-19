@@ -445,6 +445,8 @@ func main() {
 			fmt.Print("\n")
 			mostrarDatos(linux.memory, linux.processor.process)
 			fmt.Print("\n")
+			mostrarColaListos(linux.queue)
+			fmt.Print("\n")
 			fmt.Print("* Esta es la cola de listos: ")
 			mostrarColas(linux.queue)
 			fmt.Print("* Esta es la cola de input/nuevos: ")
