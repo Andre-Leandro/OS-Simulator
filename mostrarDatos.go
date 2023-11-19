@@ -15,6 +15,8 @@ const (
 	columnKeyState                 = "state"
 	columnKeyInternalFragmentation = "internalFragmentation"
 	columnKeyProcess               = "process"
+	columnKeyProcessor             = "processor"
+	columnKeyProcessInProcessor    = "processInProcessor"
 )
 
 var (
@@ -26,7 +28,7 @@ var (
 		Align(lipgloss.Center) */
 )
 
-func NewModelShowData(memoria Memory) Model {
+func NewModelShowData(memoria Memory, proceso Process) Model {
 
 	// Crear columnas con estilo base
 	columns := []table.Column{
@@ -42,26 +44,36 @@ func NewModelShowData(memoria Memory) Model {
 	for i, m := range memoria.partitions {
 		partition := memoria.partitions[i]
 		colorState := "#f64"
+		colorInProcessor := "#h64"
 
 		state := "Ocupado"
 		if partition.state {
 			state = "Libre"
 			colorState = "#8b8"
 		}
+
 		processName := "-"
 		if partition.process.pid != 0 {
 			processName = fmt.Sprintf("Proceso-%d", partition.process.pid)
+		}
+
+		if partition.process.pid == proceso.pid {
+			colorInProcessor = "#8b8"
 		}
 
 		coloredState := lipgloss.NewStyle().
 			Foreground(lipgloss.Color(colorState)).
 			Render(state)
 
+		coloredInProccesor := lipgloss.NewStyle().
+			Foreground(lipgloss.Color(colorInProcessor)).
+			Render(processName)
+
 		row := table.NewRow(table.RowData{
 			columnKeySize:                  m.size,
 			columnKeyState:                 coloredState,
 			columnKeyInternalFragmentation: m.internalFragmentation,
-			columnKeyProcess:               processName,
+			columnKeyProcess:               coloredInProccesor,
 		})
 		allRows = append(allRows, row)
 
@@ -70,6 +82,26 @@ func NewModelShowData(memoria Memory) Model {
 	return Model{
 		tabla: table.New(columns).
 			WithRows(allRows).
+			BorderRounded(),
+	}
+}
+
+func NewModelShowProcessInProcessor(proceso Process) Model {
+
+	// Crear columnas con estilo base
+	columns := []table.Column{table.NewColumn(columnKeyProcessor, "Procesador", 15).WithStyle(styleBase),
+		table.NewColumn(columnKeyProcessInProcessor, "NumeroPid", 5).WithStyle(styleBase)}
+
+	// Crear filas con datos de todos los procesos
+	var allRows []table.Row
+	row := table.NewRow(table.RowData{
+		columnKeyProcessor:          "PROCESADOR",
+		columnKeyProcessInProcessor: proceso.pid,
+	})
+	allRows = append(allRows, row)
+	return Model{
+		tabla: table.New(columns).
+			WithRows(allRows).WithHeaderVisibility(false).
 			BorderRounded(),
 	}
 }
@@ -99,9 +131,8 @@ func NewModelShowData(memoria Memory) Model {
 	}
 } */
 
-func mostrarDatos(memoria Memory) {
-
-	p := tea.NewProgram(NewModelShowData(memoria))
+func mostrarDatos(memoria Memory, proceso Process) {
+	p := tea.NewProgram(NewModelShowData(memoria, proceso))
 
 	go func() {
 		time.Sleep(0)                          // Espera 3 segundos (ajusta según sea necesario)
@@ -111,4 +142,18 @@ func mostrarDatos(memoria Memory) {
 	if err := p.Start(); err != nil {
 		log.Fatal(err)
 	}
+}
+
+func mostrarProcesador(proceso Process) {
+	j := tea.NewProgram(NewModelShowProcessInProcessor(proceso))
+
+	go func() {
+		time.Sleep(0)
+		j.Send(tea.KeyMsg{Type: tea.KeyCtrlC}) // Envía un mensaje de tecla para cerrar la aplicación
+	}()
+
+	if err := j.Start(); err != nil {
+		log.Fatal(err)
+	}
+
 }

@@ -441,8 +441,10 @@ func main() {
 				break
 			}
 			fmt.Println("\n", "------------------------------------ TIEMPO: ", linux.time, " ------------------------------------", "\n")
-			mostrarDatos(linux.memory)
-			fmt.Println("\n", "PROCESADOR: Proceso ", linux.processor.process.pid)
+			mostrarProcesador(linux.processor.process)
+			fmt.Print("\n")
+			mostrarDatos(linux.memory, linux.processor.process)
+			fmt.Print("\n")
 			fmt.Print("* Esta es la cola de listos: ")
 			mostrarColas(linux.queue)
 			fmt.Print("* Esta es la cola de input/nuevos: ")

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"time"
@@ -145,6 +146,7 @@ func arrancar(completedProcesses []Process, allProcesses []Process) {
 	if err := p.Start(); err != nil {
 		log.Fatal(err)
 	}
+	fmt.Print("\n")
 
 	j := tea.NewProgram(NewModelAverage(averageTurnaroundTime, averageWaitTime))
 
