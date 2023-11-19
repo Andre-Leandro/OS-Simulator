@@ -401,7 +401,7 @@ func main() {
 	/* fmt.Println(del) */
 
 	var input string
-	fmt.Print("Inicio del Sistema Operativo")
+	fmt.Print("Inicio del Sistema Operativo - Presione ENTER para continuar")
 
 	for {
 		fmt.Scanln(&input)
@@ -415,7 +415,7 @@ func main() {
 					linux.addReady(&cola)
 				}
 				if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
-					fmt.Println("Se termino de procesar todo - Fin de la Simulacion")
+					fmt.Println("Se termino de procesar todo - Fin de la Simulación")
 					break
 				}
 				if linux.queue[0].loaded == false {
@@ -440,28 +440,31 @@ func main() {
 				fmt.Println("\n", "Se termino de procesar todo - Fin de la Simulacion", "\n")
 				break
 			}
-			fmt.Println("\n", "------------------------------------ TIEMPO: ", linux.time, " ------------------------------------", "\n")
+			fmt.Println("\n", "---------------------------------- TIEMPO: ", linux.time, " ----------------------------------", "\n")
 			mostrarProcesador(linux.processor.process)
 			fmt.Print("\n")
+			mostrarDatos2("MEMORIA")
 			mostrarDatos(linux.memory, linux.processor.process)
-			fmt.Print("\n")
+				fmt.Print("\n")
+			mostrarDatos2("COLA DE LISTOS")
 			mostrarColaListos(linux.queue)
+			fmt.Print("\n")
 
-			/* 			fmt.Print("* Esta es la cola de listos: ")
-			   			mostrarColas(linux.queue)
-			   			fmt.Print("* Esta es la cola de input/nuevos: ")
+						//fmt.Print("* Esta es la cola de listos: ")
+			   		//	mostrarColas(linux.queue)
+			   			fmt.Print("• Esta es la cola de  procesos NUEVOS: ")
 			   			mostrarColas(cola)
-			   			fmt.Print("* Esta es la cola de finalizados: ")
-			   			mostrarColas(linux.completedProcesses) */
+			   			fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
+			   			mostrarColas(linux.completedProcesses) 
 
-			fmt.Println("\n", "--------------------------------------------------------------------------------------")
+			fmt.Println("\n", "----------------------------------------------------------------------------------")
 
 		} else {
 			break
 		}
 	}
 
-	fmt.Println("\n", "CUADRO ESTADISTICO")
+	fmt.Println("\n", "CUADRO ESTADÍSTICO")
 	arrancar(linux.completedProcesses, processes)
 
 }
