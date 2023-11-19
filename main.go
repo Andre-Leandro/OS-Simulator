@@ -65,7 +65,7 @@ func (os *OS) addReady(l *[]Process) {
 			break
 		}
 
-		if copy[index].arrivalTime <= os.time { 
+		if copy[index].arrivalTime <= os.time {
 			os.queue = append(os.queue, copy[index])
 			if len(*l) > 0 {
 				if len(*l) == 1 {
@@ -108,7 +108,7 @@ func bestFit(m *Memory, p *Process, os *OS) {
 	internalFragmentation = math.MaxInt
 
 	for index := range m.partitions {
-		partition := (*m).partitions[index] 
+		partition := (*m).partitions[index]
 		if partition.state && partition.size >= p.size {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
@@ -352,11 +352,11 @@ func main() {
 
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
-				
+
 				linux.time = cola[0].arrivalTime
 				linux.addReady(&cola)
 
-				//bucle d econtrol de tamaño	
+				//bucle d econtrol de tamaño
 				for len(linux.queue) > 0 && linux.queue[0].size > biggestPartition {
 					fmt.Println(" El proceso ", linux.queue[0].pid, " no será ejecutado ya que excede el tamaño de la memoria")
 					linux.queue = linux.queue[1:]
@@ -367,7 +367,7 @@ func main() {
 					bestFit(&linux.memory, &linux.queue[0], &linux)
 					linux.processor.process = linux.queue[0]
 					linux.queue = append(linux.queue[1:])
-						
+
 				}
 			}
 
@@ -381,22 +381,24 @@ func main() {
 				mostrarProcesador(linux.processor.process)
 				fmt.Print("\n")
 				mostrarDatos2("MEMORIA")
+				fmt.Print("\n")
 				mostrarDatos(linux.memory, linux.processor.process)
-					fmt.Print("\n")
+				fmt.Print("\n")
 				mostrarDatos2("COLA DE LISTOS")
+				fmt.Print("\n")
 				mostrarColaListos(linux.queue)
 				fmt.Print("\n")
-	
-							//fmt.Print("* Esta es la cola de listos: ")
-						   //	mostrarColas(linux.queue)
-							   fmt.Print("• Esta es la cola de  procesos NUEVOS: ")
-							   mostrarColas(cola)
-							   fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
-							   mostrarColas(linux.completedProcesses) 
-	
+
+				//fmt.Print("* Esta es la cola de listos: ")
+				//	mostrarColas(linux.queue)
+				fmt.Print("• Esta es la cola de  procesos NUEVOS: ")
+				mostrarColas(cola)
+				fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
+				mostrarColas(linux.completedProcesses)
+
 				fmt.Println("\n", "----------------------------------------------------------------------------------")
 			}
-		
+
 		} else {
 			break
 		}
