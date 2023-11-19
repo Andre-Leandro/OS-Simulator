@@ -316,10 +316,11 @@ func main() {
 	(&linux).initialize(memoria)
 	cola = append(cola, processes...)
 	cola = quicksort2(cola)
-	cola, _ = filterProcessesBySize(cola, biggestPartition)
+	//cola, _ = filterProcessesBySize(cola, biggestPartition)
 	/* fmt.Println(del) */
 	var input string
 	fmt.Print("Inicio del Sistema Operativo - Presione ENTER para continuar")
+	fmt.Print("\n")
 
 	for {
 		fmt.Scanln(&input)
@@ -334,45 +335,68 @@ func main() {
 					fmt.Println("Se termino de procesar todo - Fin de la Simulación")
 					break
 				}
-				if linux.queue[0].loaded == false {
-					bestFit(&linux.memory, &linux.queue[0], &linux)
+
+				for len(linux.queue) > 0 && linux.queue[0].size > biggestPartition {
+					fmt.Println(" El proceso ", linux.queue[0].pid, " no será ejecutado ya que excede el tamaño de la memoria")
+					linux.queue = linux.queue[1:]
 				}
-				linux.processor.process = linux.queue[0]
-				linux.queue = append(linux.queue[1:])
-				linux.addReady(&cola)
+
+				if len(linux.queue) > 0 {
+					if linux.queue[0].loaded == false {
+						bestFit(&linux.memory, &linux.queue[0], &linux)
+					}
+					linux.processor.process = linux.queue[0]
+					linux.queue = append(linux.queue[1:])
+					linux.addReady(&cola)
+				}
 
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
+				
 				linux.time = cola[0].arrivalTime
 				linux.addReady(&cola)
-				bestFit(&linux.memory, &linux.queue[0], &linux)
-				linux.processor.process = linux.queue[0]
-				linux.queue = append(linux.queue[1:])
+
+				//bucle d econtrol de tamaño	
+				for len(linux.queue) > 0 && linux.queue[0].size > biggestPartition {
+					fmt.Println(" El proceso ", linux.queue[0].pid, " no será ejecutado ya que excede el tamaño de la memoria")
+					linux.queue = linux.queue[1:]
+				}
+
+				if len(linux.queue) > 0 {
+
+					bestFit(&linux.memory, &linux.queue[0], &linux)
+					linux.processor.process = linux.queue[0]
+					linux.queue = append(linux.queue[1:])
+						
+				}
 			}
 
 			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 				fmt.Println("\n", "Se termino de procesar todo - Fin de la Simulacion", "\n")
 				break
 			}
-			fmt.Println("\n", "---------------------------------- TIEMPO: ", linux.time, " ----------------------------------", "\n")
-			mostrarProcesador(linux.processor.process)
-			fmt.Print("\n")
-			mostrarDatos2("MEMORIA")
-			mostrarDatos(linux.memory, linux.processor.process)
+
+			if !linux.processor.process.isEmpty() {
+				fmt.Println("\n", "---------------------------------- TIEMPO: ", linux.time, " ----------------------------------", "\n")
+				mostrarProcesador(linux.processor.process)
 				fmt.Print("\n")
-			mostrarDatos2("COLA DE LISTOS")
-			mostrarColaListos(linux.queue)
-			fmt.Print("\n")
-
-						//fmt.Print("* Esta es la cola de listos: ")
-			   		//	mostrarColas(linux.queue)
-			   			fmt.Print("• Esta es la cola de  procesos NUEVOS: ")
-			   			mostrarColas(cola)
-			   			fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
-			   			mostrarColas(linux.completedProcesses) 
-
-			fmt.Println("\n", "----------------------------------------------------------------------------------")
-
+				mostrarDatos2("MEMORIA")
+				mostrarDatos(linux.memory, linux.processor.process)
+					fmt.Print("\n")
+				mostrarDatos2("COLA DE LISTOS")
+				mostrarColaListos(linux.queue)
+				fmt.Print("\n")
+	
+							//fmt.Print("* Esta es la cola de listos: ")
+						   //	mostrarColas(linux.queue)
+							   fmt.Print("• Esta es la cola de  procesos NUEVOS: ")
+							   mostrarColas(cola)
+							   fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
+							   mostrarColas(linux.completedProcesses) 
+	
+				fmt.Println("\n", "----------------------------------------------------------------------------------")
+			}
+		
 		} else {
 			break
 		}
