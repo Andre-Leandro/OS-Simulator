@@ -347,16 +347,19 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 	var procesos []Process
 
 	for {
-		fmt.Print("Ingrese la cantidad de procesos: ")
 		var cantidadProcesos int
+		for {
+			fmt.Print("Ingrese la cantidad de procesos: ")
+			_, err := fmt.Scanln(&cantidadProcesos)
 
-		_, err := fmt.Scanln(&cantidadProcesos)
+			if err != nil || cantidadProcesos <= 0 {
+				fmt.Println("Error al leer la cantidad de procesos. Por favor, ingrese un número entero positivo.")
+				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+				continue
+			} else {
+				break
+			}
 
-		if err != nil || cantidadProcesos <= 0 {
-			fmt.Println("Error al leer la cantidad de procesos. Por favor, ingrese un número entero positivo.")
-			// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-			fmt.Scanln()
-			continue
 		}
 
 		for i := 0; i < cantidadProcesos; i++ {
@@ -383,7 +386,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 
 			for {
 				fmt.Printf("Ingrese tamaño para el proceso %d: ", i+1)
-				_, err = fmt.Scanln(&size)
+				_, err := fmt.Scanln(&size)
 
 				if err != nil || size <= 0 {
 					fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
@@ -396,7 +399,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 
 			for {
 				fmt.Printf("Ingrese tiempo de llegada para el proceso %d: ", i+1)
-				_, err = fmt.Scanln(&arrivalTime)
+				_, err := fmt.Scanln(&arrivalTime)
 
 				if err != nil || arrivalTime < 0 {
 					fmt.Println("Error al leer el tiempo de llegada. Por favor, ingrese un número entero mayor o igual a 0.")
@@ -409,7 +412,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 
 			for {
 				fmt.Printf("Ingrese tiempo de ejecución para el proceso %d: ", i+1)
-				_, err = fmt.Scanln(&time)
+				_, err := fmt.Scanln(&time)
 
 				if err != nil || time <= 0 {
 					fmt.Println("Error al leer el tiempo de ejecución. Por favor, ingrese un número entero positivo.")
