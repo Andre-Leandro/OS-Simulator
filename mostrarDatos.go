@@ -53,8 +53,8 @@ func NewModelShowData(memoria Memory, proceso Process) Model {
 		table.NewColumn(columnKeyDirInicio, "Dir. Inicio", 15).WithStyle(styleBase),
 		table.NewColumn(columnKeySize, "Tamaño (Kb)", 15).WithStyle(styleBase),
 		table.NewColumn(columnKeyState, "Estado", 15).WithStyle(styleBase),
-		table.NewColumn(columnKeyInternalFragmentation, "Fragm. Interna (Kb)", 25).WithStyle(styleBase),
-		table.NewColumn(columnKeyProcess, "Proceso", 20).WithStyle(styleBase),
+		table.NewColumn(columnKeyInternalFragmentation, "Fragm. Interna (Kb)", 22).WithStyle(styleBase),
+		table.NewColumn(columnKeyProcess, "Proceso", 19).WithStyle(styleBase),
 	}
 
 	// Crear filas con datos de todos los procesos
@@ -143,9 +143,9 @@ func NewModelShowReadyQueue(colaListos []Process) Model {
 	columns := []table.Column{
 		table.NewColumn(columnKeyPid, "PID", 9).WithStyle(styleBase),
 		table.NewColumn(columnKeyArrivalTime, "Tiempo de Arribo", 21).WithStyle(styleBase),
-		table.NewColumn(columnKeySize, " Tamaño (Kb)", 13).WithStyle(styleBase),
-		table.NewColumn(columnKeyTime, "T. Restante", 11).WithStyle(styleBase),
-		table.NewColumn(columnKeyLoaded, "Cargado", 20).WithStyle(styleBase),
+		table.NewColumn(columnKeySize, " Tamaño (Kb)", 15).WithStyle(styleBase),
+		table.NewColumn(columnKeyTime, "T. Restante", 22).WithStyle(styleBase),
+		table.NewColumn(columnKeyLoaded, "Cargado", 19).WithStyle(styleBase),
 	}
 
 	// Crear filas con datos de todos los procesos
@@ -197,9 +197,9 @@ func NewModelShowNewQueue(colaNuevos []Process) Model {
 	// Crear columnas con estilo base
 	columns := []table.Column{
 		table.NewColumn(columnKeyPid, "PID", 9).WithStyle(styleBase),
-		table.NewColumn(columnKeyArrivalTime, "Tiempo de Arribo", 21).WithStyle(styleBase),
-		table.NewColumn(columnKeySize, " Tamaño (Kb)", 25).WithStyle(styleBase),
-		table.NewColumn(columnKeyTime, "Tiempo", 20).WithStyle(styleBase),
+		table.NewColumn(columnKeyArrivalTime, "Tiempo de Irrupción", 21).WithStyle(styleBase),
+		table.NewColumn(columnKeySize, " Tamaño (Kb)", 19).WithStyle(styleBase),
+		table.NewColumn(columnKeyTime, "Tiempo", 18).WithStyle(styleBase),
 	}
 
 	// Crear filas con datos de todos los procesos
