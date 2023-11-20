@@ -369,7 +369,6 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				if err != nil || pid < 0 {
 					fmt.Println("Error al leer el PID. Por favor, ingrese un número entero.")
 					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-					fmt.Scanln()
 					continue
 				}
 
@@ -378,37 +377,47 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 					break
 				} else {
 					fmt.Println("Error: El PID ya está en uso. Por favor, ingrese un PID único.")
+					continue
 				}
 			}
 
-			fmt.Printf("Ingrese tamaño para el proceso %d: ", i+1)
-			_, err = fmt.Scanln(&size)
+			for {
+				fmt.Printf("Ingrese tamaño para el proceso %d: ", i+1)
+				_, err = fmt.Scanln(&size)
 
-			if err != nil || size <= 0 {
-				fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
-				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-				fmt.Scanln()
-				continue
+				if err != nil || size <= 0 {
+					fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
+					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+					continue
+				} else {
+					break
+				}
 			}
 
-			fmt.Printf("Ingrese tiempo de llegada para el proceso %d: ", i+1)
-			_, err = fmt.Scanln(&arrivalTime)
+			for {
+				fmt.Printf("Ingrese tiempo de llegada para el proceso %d: ", i+1)
+				_, err = fmt.Scanln(&arrivalTime)
 
-			if err != nil || arrivalTime < 0 {
-				fmt.Println("Error al leer el tiempo de llegada. Por favor, ingrese un número entero mayor o igual a 0.")
-				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-				fmt.Scanln()
-				continue
+				if err != nil || arrivalTime < 0 {
+					fmt.Println("Error al leer el tiempo de llegada. Por favor, ingrese un número entero mayor o igual a 0.")
+					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+					continue
+				} else {
+					break
+				}
 			}
 
-			fmt.Printf("Ingrese tiempo de ejecución para el proceso %d: ", i+1)
-			_, err = fmt.Scanln(&time)
+			for {
+				fmt.Printf("Ingrese tiempo de ejecución para el proceso %d: ", i+1)
+				_, err = fmt.Scanln(&time)
 
-			if err != nil || time <= 0 {
-				fmt.Println("Error al leer el tiempo de ejecución. Por favor, ingrese un número entero positivo.")
-				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-				fmt.Scanln()
-				continue
+				if err != nil || time <= 0 {
+					fmt.Println("Error al leer el tiempo de ejecución. Por favor, ingrese un número entero positivo.")
+					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+					continue
+				} else {
+					break
+				}
 			}
 
 			proceso := Process{pid, size, arrivalTime, -1, time, false}
