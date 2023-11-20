@@ -388,12 +388,14 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				fmt.Printf("Ingrese tamaño (Kb) para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&size)
 
+				if size > 250 {
+					fmt.Println("El tamaño de los procesos no puede se superior a los 250 Kb.")
+					continue
+				}
+
 				if err != nil || size <= 0 {
 					fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
 					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-					if size > 250 {
-						fmt.Println("El tamaño de los procesos no puede sr superior a los 250 Kb.")
-					}
 					continue
 				} else {
 					break
