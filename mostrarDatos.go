@@ -34,7 +34,6 @@ var (
 		Align(lipgloss.Center) */
 )
 
-
 func NewModelWithTitle(title string) Model {
 	columns := []table.Column{
 		table.NewColumn(columnKeySize, title, 78).WithStyle(styleBase),
@@ -43,10 +42,8 @@ func NewModelWithTitle(title string) Model {
 	return Model{
 		tabla: table.New(columns).
 			BorderRounded(),
-			
 	}
 }
-
 
 func NewModelShowData(memoria Memory, proceso Process) Model {
 
@@ -129,10 +126,10 @@ func NewModelShowProcessInProcessor(proceso Process) Model {
 func NewModelShowReadyQueue(colaListos []Process) Model {
 	// Crear columnas con estilo base
 	columns := []table.Column{
-		table.NewColumn(columnKeyPid, "Pid", 9).WithStyle(styleBase),
+		table.NewColumn(columnKeyPid, "PID", 9).WithStyle(styleBase),
 		table.NewColumn(columnKeyArrivalTime, "Tiempo de Arribo", 21).WithStyle(styleBase),
 		table.NewColumn(columnKeySize, " Tamaño (Kb)", 13).WithStyle(styleBase),
-		table.NewColumn(columnKeyTime, "Tiempo R.", 11).WithStyle(styleBase),
+		table.NewColumn(columnKeyTime, "T. Restante", 11).WithStyle(styleBase),
 		table.NewColumn(columnKeyLoaded, "Cargado", 20).WithStyle(styleBase),
 	}
 
@@ -220,7 +217,6 @@ func mostrarDatos(memoria Memory, proceso Process) {
 	}
 }
 
-
 func mostrarDatos2(title string) {
 	p := tea.NewProgram(NewModelWithTitle(title))
 
@@ -233,8 +229,6 @@ func mostrarDatos2(title string) {
 		log.Fatal(err)
 	}
 }
-
-
 
 func mostrarProcesador(proceso Process) {
 	j := tea.NewProgram(NewModelShowProcessInProcessor(proceso))

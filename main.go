@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/sqweek/dialog"
 )
 
 type OS struct {
@@ -54,7 +56,16 @@ const quantum = 2
 const biggestPartition = 250
 
 func swapOut(i int) {
-	fmt.Println("Se libero la particion numero ", i)
+	switch i {
+	case 1:
+		fmt.Println("Se liberó la partición GRANDE (250 Kb)")
+	case 2:
+		fmt.Println("Se liberó la partición MEDIANA (120 Kb)")
+	case 3:
+		fmt.Println("Se liberó la partición PEQUEÑA (60 Kb)")
+	default:
+		fmt.Println("Partición no reconocida")
+	}
 }
 
 func (os *OS) addReady(l *[]Process) {
@@ -68,7 +79,6 @@ func (os *OS) addReady(l *[]Process) {
 		if copy[index].arrivalTime <= os.time {
 			os.queue = append(os.queue, copy[index])
 
-		
 			if len(*l) > 0 {
 				if len(*l) == 1 {
 					*l = []Process{}
@@ -77,7 +87,7 @@ func (os *OS) addReady(l *[]Process) {
 				}
 			}
 		}
-		
+
 	}
 }
 
@@ -97,7 +107,7 @@ func bestFitLazy(m *Memory, p *Process, os *OS) {
 				}
 			}
 		}
-	
+
 		if idPartition != -1 {
 			(*m).partitions[idPartition].state = false // Ocupado
 			(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
@@ -109,7 +119,7 @@ func bestFitLazy(m *Memory, p *Process, os *OS) {
 		}
 
 	}
-	
+
 }
 
 func bestFit(m *Memory, p *Process, os *OS) {
@@ -308,14 +318,22 @@ func mostrarColas(processes []Process) {
 }
 
 func main() {
-	processes, err := ReadProcessesFromFile("ejemplo.txt")
+
+	filePath, err := dialog.File().Load()
+	if err != nil {
+		fmt.Println("Error al abrir el explorador de archivos:", err)
+		return
+	}
+
+	processes, err := ReadProcessesFromFile(filePath)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
+
 	var cola []Process
 
-	var del []Process 
+	var del []Process
 	var linux OS
 	memoria := Memory{
 		partitions: [3]MemoryPartition{
@@ -331,7 +349,7 @@ func main() {
 	var input string
 	fmt.Println("Inicio del Sistema Operativo - Presione ENTER para continuar")
 	fmt.Print("\n")
-	fmt.Print("•Estos son los procesos ELIMINADOS por exceder el tamaño de memoria: ") 
+	fmt.Print("• Estos son los procesos ELIMINADOS por exceder el tamaño de memoria: ")
 	mostrarColas(del)
 
 	for {
@@ -363,19 +381,16 @@ func main() {
 				linux.time = cola[0].arrivalTime
 				linux.addReady(&cola)
 
-			
 				bestFit(&linux.memory, &linux.queue[0], &linux)
-				
+
 				linux.processor.process = linux.queue[0]
 				linux.queue = append(linux.queue[1:])
-
-
+				linux.addReady(&cola)
 				for i := range linux.queue {
-					
+
 					bestFitLazy(&linux.memory, &linux.queue[i], &linux)
 				}
 			}
-	
 
 			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 				fmt.Println("\n", "Se termino de procesar todo - Fin de la Simulacion", "\n")
@@ -386,11 +401,13 @@ func main() {
 				fmt.Println("\n", "---------------------------------- TIEMPO: ", linux.time, " ----------------------------------", "\n")
 				mostrarProcesador(linux.processor.process)
 				fmt.Print("\n")
-				mostrarDatos2("MEMORIA")
+				fmt.Print("                                     MEMORIA")
+				// mostrarDatos2("MEMORIA")
 				fmt.Print("\n")
 				mostrarDatos(linux.memory, linux.processor.process)
 				fmt.Print("\n")
-				mostrarDatos2("COLA DE LISTOS")
+				// mostrarDatos2("COLA DE LISTOS")
+				fmt.Print("                                 COLA DE LISTOS")
 				fmt.Print("\n")
 				mostrarColaListos(linux.queue)
 				fmt.Print("\n")
@@ -402,13 +419,13 @@ func main() {
 				fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
 				mostrarColas(linux.completedProcesses)
 
-				fmt.Println("\n", "----------------------------------------------------------------------------------")
+				fmt.Println("----------------------------------------------------------------------------------")
 			}
 
 		} else {
 			break
 		}
 	}
-	fmt.Println("\n", "CUADRO ESTADÍSTICO")
+	fmt.Println("\n", "                 CUADRO ESTADÍSTICO")
 	arrancar(linux.completedProcesses, processes)
 }
