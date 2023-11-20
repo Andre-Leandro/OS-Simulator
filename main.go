@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"os/exec"
+	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
@@ -317,11 +320,32 @@ func mostrarColas(processes []Process) {
 	fmt.Println("\n")
 }
 
+func clearScreen() {
+	switch runtime.GOOS {
+	case "linux", "darwin": // para Linux y macOS
+		cmd := exec.Command("clear")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	case "windows": // para Windows
+		cmd := exec.Command("cmd", "/c", "cls")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	default:
+		fmt.Println("No se pudo determinar el sistema operativo para realizar el clear screen.")
+	}
+}
+
 func main() {
+	fmt.Println("Seleccione un archivo con procesos para iniciar la simulación")
 
 	filePath, err := dialog.File().Load()
 	if err != nil {
 		fmt.Println("Error al abrir el explorador de archivos:", err)
+		return
+	}
+
+	if filepath.Ext(filePath) != ".txt" {
+		fmt.Println("El archivo seleccionado no tiene la extensión .txt. Por favor, seleccione un archivo válido.")
 		return
 	}
 
@@ -330,6 +354,7 @@ func main() {
 		fmt.Println("Error:", err)
 		return
 	}
+	clearScreen()
 
 	var cola []Process
 
