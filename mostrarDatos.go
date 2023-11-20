@@ -12,6 +12,7 @@ import (
 
 const (
 	//DataTable
+	columnKeyDirInicio             = "dirInicio"
 	columnKeySize                  = "size"
 	columnKeyState                 = "state"
 	columnKeyInternalFragmentation = "internalFragmentation"
@@ -49,6 +50,7 @@ func NewModelShowData(memoria Memory, proceso Process) Model {
 
 	// Crear columnas con estilo base
 	columns := []table.Column{
+		table.NewColumn(columnKeyDirInicio, "Dir. Inicio", 15).WithStyle(styleBase),
 		table.NewColumn(columnKeySize, "Tamaño (Kb)", 15).WithStyle(styleBase),
 		table.NewColumn(columnKeyState, "Estado", 15).WithStyle(styleBase),
 		table.NewColumn(columnKeyInternalFragmentation, "Fragm. Interna (Kb)", 25).WithStyle(styleBase),
@@ -62,6 +64,18 @@ func NewModelShowData(memoria Memory, proceso Process) Model {
 		partition := memoria.partitions[i]
 		colorState := "#f64"
 		colorInProcessor := "white"
+		var dirInicio string
+
+		switch i {
+		case 0:
+			dirInicio = "0x1D6" //470
+		case 1:
+			dirInicio = "0x15E" //350
+		case 2:
+			dirInicio = "0x64" //100
+		default:
+			fmt.Println("Partición no reconocida")
+		}
 
 		state := "Ocupado"
 		if partition.state {
@@ -87,6 +101,7 @@ func NewModelShowData(memoria Memory, proceso Process) Model {
 			Render(processName)
 
 		row := table.NewRow(table.RowData{
+			columnKeyDirInicio:             dirInicio,
 			columnKeySize:                  m.size,
 			columnKeyState:                 coloredState,
 			columnKeyInternalFragmentation: m.internalFragmentation,
