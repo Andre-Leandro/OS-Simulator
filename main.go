@@ -217,7 +217,7 @@ func (os *OS) initialize(m Memory) {
 	os.memory = m
 }
 
-func ReadProcessesFromFile(filename string) ([]Process, error) {
+func ReadProcessesFromFile(filename string, pidMap map[int]bool) ([]Process, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -237,6 +237,11 @@ func ReadProcessesFromFile(filename string) ([]Process, error) {
 		pid, err := strconv.Atoi(values[0])
 		if err != nil {
 			return nil, err
+		}
+		if isPIDInUse(pid, pidMap) {
+			return nil, fmt.Errorf("Error: El PID %d se repite más de una vez. Por favor, ingrese PIDs únicos.", pid)
+		} else {
+			pidMap[pid] = true
 		}
 		size, err := strconv.Atoi(values[1])
 		if err != nil {
@@ -338,7 +343,7 @@ func clearScreen() {
 	}
 }
 
-func ingresarProcesosManualmente() []Process {
+func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 	var procesos []Process
 
 	fmt.Print("Ingrese la cantidad de procesos: ")
@@ -348,8 +353,17 @@ func ingresarProcesosManualmente() []Process {
 	for i := 0; i < cantidadProcesos; i++ {
 		var pid, size, arrivalTime, time int
 
-		fmt.Printf("Ingrese PID para el proceso %d: ", i+1)
-		fmt.Scanln(&pid)
+		for {
+			fmt.Printf("Ingrese PID para el proceso %d: ", i+1)
+			fmt.Scanln(&pid)
+
+			if !isPIDInUse(pid, pidMap) {
+				pidMap[pid] = true
+				break
+			} else {
+				fmt.Println("Error: El PID ya está en uso. Por favor, ingrese un PID único.")
+			}
+		}
 
 		fmt.Printf("Ingrese tamaño para el proceso %d: ", i+1)
 		fmt.Scanln(&size)
@@ -367,7 +381,13 @@ func ingresarProcesosManualmente() []Process {
 	return procesos
 }
 
+func isPIDInUse(pid int, pidMap map[int]bool) bool {
+	_, exists := pidMap[pid]
+	return exists
+}
+
 func main() {
+	var pidMap = make(map[int]bool)
 	var opcion int
 	var err error
 
@@ -397,7 +417,7 @@ func main() {
 
 	switch opcion {
 	case 1:
-		processes = ingresarProcesosManualmente()
+		processes = ingresarProcesosManualmente(pidMap)
 	case 2:
 		fmt.Println("Seleccione un archivo con procesos para iniciar la simulación")
 		filePath, err := dialog.File().Load()
@@ -411,7 +431,7 @@ func main() {
 			return
 		}
 
-		processes, err = ReadProcessesFromFile(filePath)
+		processes, err = ReadProcessesFromFile(filePath, pidMap)
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
