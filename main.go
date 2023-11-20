@@ -75,17 +75,18 @@ func (os *OS) addReady(l *[]Process) {
 				}
 			}
 		}
-		bestFitLazy(os.memory, copy[index])
+		bestFitLazy(&os.memory, &copy[index], os)
 	}
 }
 
-func bestFitLazy(m Memory, p Process) {
+func bestFitLazy(m *Memory, p *Process, os *OS) {
 	var internalFragmentation int
 	var idPartition int
+	idPartition = -1
 	internalFragmentation = math.MaxInt
 
 	for index := range m.partitions {
-		partition := m.partitions[index]
+		partition := (*m).partitions[index]
 		if partition.state && partition.size >= p.size {
 			empty := partition.size - p.size
 			if empty < internalFragmentation {
@@ -93,11 +94,15 @@ func bestFitLazy(m Memory, p Process) {
 			}
 		}
 	}
-	if idPartition != 0 {
-		selectedPartition := &m.partitions[idPartition]
-		selectedPartition.state = false
-		selectedPartition.internalFragmentation = selectedPartition.size - p.size
-		selectedPartition.process = p
+
+	if idPartition != -1 {
+		(*m).partitions[idPartition].state = false // Ocupado
+		(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
+		(*p).loaded = true
+		if p.turnaroundTime == -1 {
+			(*p).turnaroundTime = os.time
+		}
+		(*m).partitions[idPartition].process = *p
 	}
 }
 
