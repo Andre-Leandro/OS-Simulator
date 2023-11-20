@@ -346,36 +346,81 @@ func clearScreen() {
 func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 	var procesos []Process
 
-	fmt.Print("Ingrese la cantidad de procesos: ")
-	var cantidadProcesos int
-	fmt.Scanln(&cantidadProcesos)
+	for {
+		fmt.Print("Ingrese la cantidad de procesos: ")
+		var cantidadProcesos int
 
-	for i := 0; i < cantidadProcesos; i++ {
-		var pid, size, arrivalTime, time int
+		_, err := fmt.Scanln(&cantidadProcesos)
 
-		for {
-			fmt.Printf("Ingrese PID para el proceso %d: ", i+1)
-			fmt.Scanln(&pid)
-
-			if !isPIDInUse(pid, pidMap) {
-				pidMap[pid] = true
-				break
-			} else {
-				fmt.Println("Error: El PID ya está en uso. Por favor, ingrese un PID único.")
-			}
+		if err != nil {
+			fmt.Println("Error al leer la cantidad de procesos. Por favor, ingrese un número entero positivo.")
+			// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+			fmt.Scanln()
+			continue
 		}
 
-		fmt.Printf("Ingrese tamaño para el proceso %d: ", i+1)
-		fmt.Scanln(&size)
+		if cantidadProcesos <= 0 {
+			fmt.Println("Error: Ingrese un número entero positivo mayor que cero.")
+			continue
+		}
 
-		fmt.Printf("Ingrese tiempo de llegada para el proceso %d: ", i+1)
-		fmt.Scanln(&arrivalTime)
+		for i := 0; i < cantidadProcesos; i++ {
+			var pid, size, arrivalTime, time int
 
-		fmt.Printf("Ingrese tiempo de ejecución para el proceso %d: ", i+1)
-		fmt.Scanln(&time)
+			for {
+				fmt.Printf("Ingrese PID para el proceso %d: ", i+1)
+				_, err := fmt.Scanln(&pid)
 
-		proceso := Process{pid, size, arrivalTime, -1, time, false}
-		procesos = append(procesos, proceso)
+				if err != nil {
+					fmt.Println("Error al leer el PID. Por favor, ingrese un número entero.")
+					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+					fmt.Scanln()
+					continue
+				}
+
+				if !isPIDInUse(pid, pidMap) {
+					pidMap[pid] = true
+					break
+				} else {
+					fmt.Println("Error: El PID ya está en uso. Por favor, ingrese un PID único.")
+				}
+			}
+
+			fmt.Printf("Ingrese tamaño para el proceso %d: ", i+1)
+			_, err = fmt.Scanln(&size)
+
+			if err != nil || pid < 0 {
+				fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
+				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+				fmt.Scanln()
+				continue
+			}
+
+			fmt.Printf("Ingrese tiempo de llegada para el proceso %d: ", i+1)
+			_, err = fmt.Scanln(&arrivalTime)
+
+			if err != nil {
+				fmt.Println("Error al leer el tiempo de llegada. Por favor, ingrese un número entero mayor o igual a 0.")
+				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+				fmt.Scanln()
+				continue
+			}
+
+			fmt.Printf("Ingrese tiempo de ejecución para el proceso %d: ", i+1)
+			_, err = fmt.Scanln(&time)
+
+			if err != nil || time < 0 {
+				fmt.Println("Error al leer el tiempo de ejecución. Por favor, ingrese un número entero positivo.")
+				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+				fmt.Scanln()
+				continue
+			}
+
+			proceso := Process{pid, size, arrivalTime, -1, time, false}
+			procesos = append(procesos, proceso)
+		}
+
+		break
 	}
 
 	return procesos
