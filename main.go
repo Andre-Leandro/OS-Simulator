@@ -352,15 +352,10 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 
 		_, err := fmt.Scanln(&cantidadProcesos)
 
-		if err != nil {
+		if err != nil || cantidadProcesos <= 0 {
 			fmt.Println("Error al leer la cantidad de procesos. Por favor, ingrese un número entero positivo.")
 			// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
 			fmt.Scanln()
-			continue
-		}
-
-		if cantidadProcesos <= 0 {
-			fmt.Println("Error: Ingrese un número entero positivo mayor que cero.")
 			continue
 		}
 
@@ -371,7 +366,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				fmt.Printf("Ingrese PID para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&pid)
 
-				if err != nil {
+				if err != nil || pid < 0 {
 					fmt.Println("Error al leer el PID. Por favor, ingrese un número entero.")
 					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
 					fmt.Scanln()
@@ -389,7 +384,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 			fmt.Printf("Ingrese tamaño para el proceso %d: ", i+1)
 			_, err = fmt.Scanln(&size)
 
-			if err != nil || pid < 0 {
+			if err != nil || size <= 0 {
 				fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
 				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
 				fmt.Scanln()
@@ -399,7 +394,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 			fmt.Printf("Ingrese tiempo de llegada para el proceso %d: ", i+1)
 			_, err = fmt.Scanln(&arrivalTime)
 
-			if err != nil {
+			if err != nil || arrivalTime < 0 {
 				fmt.Println("Error al leer el tiempo de llegada. Por favor, ingrese un número entero mayor o igual a 0.")
 				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
 				fmt.Scanln()
@@ -409,7 +404,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 			fmt.Printf("Ingrese tiempo de ejecución para el proceso %d: ", i+1)
 			_, err = fmt.Scanln(&time)
 
-			if err != nil || time < 0 {
+			if err != nil || time <= 0 {
 				fmt.Println("Error al leer el tiempo de ejecución. Por favor, ingrese un número entero positivo.")
 				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
 				fmt.Scanln()
