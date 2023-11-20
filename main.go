@@ -391,55 +391,68 @@ func main() {
 	var opcion int
 	var err error
 
-	fmt.Println("Seleccione una opción:")
-	fmt.Println("1. Ingresar procesos manualmente")
-	fmt.Println("2. Cargar procesos desde un archivo")
-
-	for {
-		_, err = fmt.Scanln(&opcion)
-
-		if err != nil {
-			fmt.Println("Error al leer la opción. Por favor, inténtelo nuevamente.")
-			// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-			fmt.Scanln()
-			continue
-		}
-
-		if opcion != 1 && opcion != 2 {
-			fmt.Println("Opción no válida. Por favor, ingrese 1 o 2.")
-			continue
-		}
-
-		break
-	}
-
+	var restart bool
 	var processes []Process
 
-	switch opcion {
-	case 1:
-		processes = ingresarProcesosManualmente(pidMap)
-	case 2:
-		fmt.Println("Seleccione un archivo con procesos para iniciar la simulación")
-		filePath, err := dialog.File().Load()
-		if err != nil {
-			fmt.Println("Error al abrir el explorador de archivos:", err)
+	for {
+		pidMap = make(map[int]bool)
+		fmt.Println("Seleccione una opción:")
+		fmt.Println("1. Ingresar procesos manualmente")
+		fmt.Println("2. Cargar procesos desde un archivo")
+
+		restart = false
+
+		for {
+			_, err = fmt.Scanln(&opcion)
+
+			if err != nil {
+				fmt.Println("Error al leer la opción. Por favor, inténtelo nuevamente.")
+				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+				fmt.Scanln()
+				continue
+			}
+
+			if opcion != 1 && opcion != 2 {
+				fmt.Println("Opción no válida. Por favor, ingrese 1 o 2.")
+				continue
+			}
+
+			break
+		}
+
+		switch opcion {
+		case 1:
+			processes = ingresarProcesosManualmente(pidMap)
+		case 2:
+			fmt.Println("Seleccione un archivo con procesos para iniciar la simulación")
+			filePath, err := dialog.File().Load()
+			if err != nil {
+				fmt.Println("Error al abrir el explorador de archivos:", err)
+				return
+			}
+
+			if filepath.Ext(filePath) != ".txt" {
+				fmt.Println("El archivo seleccionado no tiene la extensión .txt. Por favor, seleccione un archivo válido.")
+				restart = true
+				break
+			}
+
+			processes, err = ReadProcessesFromFile(filePath, pidMap)
+			if err != nil {
+				fmt.Println("Error:", err)
+				restart = true
+				break
+			}
+		default:
+			fmt.Println("Opción no válida. Saliendo del programa.")
 			return
 		}
 
-		if filepath.Ext(filePath) != ".txt" {
-			fmt.Println("El archivo seleccionado no tiene la extensión .txt. Por favor, seleccione un archivo válido.")
-			return
+		if !restart {
+			break
 		}
-
-		processes, err = ReadProcessesFromFile(filePath, pidMap)
-		if err != nil {
-			fmt.Println("Error:", err)
-			return
-		}
-	default:
-		fmt.Println("Opción no válida. Saliendo del programa.")
-		return
 	}
+
 	clearScreen()
 
 	var cola []Process
