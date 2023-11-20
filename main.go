@@ -67,6 +67,8 @@ func (os *OS) addReady(l *[]Process) {
 
 		if copy[index].arrivalTime <= os.time {
 			os.queue = append(os.queue, copy[index])
+
+		
 			if len(*l) > 0 {
 				if len(*l) == 1 {
 					*l = []Process{}
@@ -75,7 +77,7 @@ func (os *OS) addReady(l *[]Process) {
 				}
 			}
 		}
-		bestFitLazy(&os.memory, &copy[index], os)
+		
 	}
 }
 
@@ -85,25 +87,29 @@ func bestFitLazy(m *Memory, p *Process, os *OS) {
 	idPartition = -1
 	internalFragmentation = math.MaxInt
 
-	for index := range m.partitions {
-		partition := (*m).partitions[index]
-		if partition.state && partition.size >= p.size {
-			empty := partition.size - p.size
-			if empty < internalFragmentation {
-				idPartition = index
+	if p.loaded == false {
+		for index := range m.partitions {
+			partition := (*m).partitions[index]
+			if partition.state && partition.size >= p.size {
+				empty := partition.size - p.size
+				if empty < internalFragmentation {
+					idPartition = index
+				}
 			}
 		}
-	}
-
-	if idPartition != -1 {
-		(*m).partitions[idPartition].state = false // Ocupado
-		(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
-		(*p).loaded = true
-		if p.turnaroundTime == -1 {
-			(*p).turnaroundTime = os.time
+	
+		if idPartition != -1 {
+			(*m).partitions[idPartition].state = false // Ocupado
+			(*m).partitions[idPartition].internalFragmentation = (*m).partitions[idPartition].size - (*p).size
+			(*p).loaded = true
+			if p.turnaroundTime == -1 {
+				(*p).turnaroundTime = os.time
+			}
+			(*m).partitions[idPartition].process = *p
 		}
-		(*m).partitions[idPartition].process = *p
+
 	}
+	
 }
 
 func bestFit(m *Memory, p *Process, os *OS) {
@@ -302,14 +308,14 @@ func mostrarColas(processes []Process) {
 }
 
 func main() {
-	processes, err := ReadProcessesFromFile("ejemplo2.txt")
+	processes, err := ReadProcessesFromFile("ejemplo.txt")
 	if err != nil {
 		fmt.Println("Error:", err)
 		return
 	}
 	var cola []Process
 
-	/* var del []Process */
+	var del []Process 
 	var linux OS
 	memoria := Memory{
 		partitions: [3]MemoryPartition{
@@ -321,11 +327,12 @@ func main() {
 	(&linux).initialize(memoria)
 	cola = append(cola, processes...)
 	cola = quicksort2(cola)
-	//cola, _ = filterProcessesBySize(cola, biggestPartition)
-	/* fmt.Println(del) */
+	cola, del = filterProcessesBySize(cola, biggestPartition)
 	var input string
-	fmt.Print("Inicio del Sistema Operativo - Presione ENTER para continuar")
+	fmt.Println("Inicio del Sistema Operativo - Presione ENTER para continuar")
 	fmt.Print("\n")
+	fmt.Print("•Estos son los procesos ELIMINADOS por exceder el tamaño de memoria: ") 
+	mostrarColas(del)
 
 	for {
 		fmt.Scanln(&input)
@@ -340,41 +347,35 @@ func main() {
 					fmt.Println("Se termino de procesar todo - Fin de la Simulación")
 					break
 				}
+				if linux.queue[0].loaded == false {
+					bestFit(&linux.memory, &linux.queue[0], &linux)
+				}
+				linux.processor.process = linux.queue[0]
+				linux.queue = append(linux.queue[1:])
 
-				for len(linux.queue) > 0 && linux.queue[0].size > biggestPartition {
-					fmt.Println(" El proceso ", linux.queue[0].pid, " no será ejecutado ya que excede el tamaño de la memoria")
-					linux.queue = linux.queue[1:]
+				for i := range linux.queue {
+					bestFitLazy(&linux.memory, &linux.queue[i], &linux)
 				}
 
-				if len(linux.queue) > 0 {
-					if linux.queue[0].loaded == false {
-						bestFit(&linux.memory, &linux.queue[0], &linux)
-					}
-					linux.processor.process = linux.queue[0]
-					linux.queue = append(linux.queue[1:])
-					linux.addReady(&cola)
-				}
-
+				linux.addReady(&cola)
 			} else {
 				//contemplar que es la primera vez y se puede empezar en algo distinto que 0
-
 				linux.time = cola[0].arrivalTime
 				linux.addReady(&cola)
 
-				//bucle d econtrol de tamaño
-				for len(linux.queue) > 0 && linux.queue[0].size > biggestPartition {
-					fmt.Println(" El proceso ", linux.queue[0].pid, " no será ejecutado ya que excede el tamaño de la memoria")
-					linux.queue = linux.queue[1:]
-				}
+			
+				bestFit(&linux.memory, &linux.queue[0], &linux)
+				
+				linux.processor.process = linux.queue[0]
+				linux.queue = append(linux.queue[1:])
 
-				if len(linux.queue) > 0 {
 
-					bestFit(&linux.memory, &linux.queue[0], &linux)
-					linux.processor.process = linux.queue[0]
-					linux.queue = append(linux.queue[1:])
-
+				for i := range linux.queue {
+					
+					bestFitLazy(&linux.memory, &linux.queue[i], &linux)
 				}
 			}
+	
 
 			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
 				fmt.Println("\n", "Se termino de procesar todo - Fin de la Simulacion", "\n")
