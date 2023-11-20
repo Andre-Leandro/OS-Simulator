@@ -338,23 +338,86 @@ func clearScreen() {
 	}
 }
 
+func ingresarProcesosManualmente() []Process {
+	var procesos []Process
+
+	fmt.Print("Ingrese la cantidad de procesos: ")
+	var cantidadProcesos int
+	fmt.Scanln(&cantidadProcesos)
+
+	for i := 0; i < cantidadProcesos; i++ {
+		var pid, size, arrivalTime, time int
+
+		fmt.Printf("Ingrese PID para el proceso %d: ", i+1)
+		fmt.Scanln(&pid)
+
+		fmt.Printf("Ingrese tamaño para el proceso %d: ", i+1)
+		fmt.Scanln(&size)
+
+		fmt.Printf("Ingrese tiempo de llegada para el proceso %d: ", i+1)
+		fmt.Scanln(&arrivalTime)
+
+		fmt.Printf("Ingrese tiempo de ejecución para el proceso %d: ", i+1)
+		fmt.Scanln(&time)
+
+		proceso := Process{pid, size, arrivalTime, -1, time, false}
+		procesos = append(procesos, proceso)
+	}
+
+	return procesos
+}
+
 func main() {
-	fmt.Println("Seleccione un archivo con procesos para iniciar la simulación")
+	var opcion int
+	var err error
 
-	filePath, err := dialog.File().Load()
-	if err != nil {
-		fmt.Println("Error al abrir el explorador de archivos:", err)
-		return
+	fmt.Println("Seleccione una opción:")
+	fmt.Println("1. Ingresar procesos manualmente")
+	fmt.Println("2. Cargar procesos desde un archivo")
+
+	for {
+		_, err = fmt.Scanln(&opcion)
+
+		if err != nil {
+			fmt.Println("Error al leer la opción. Por favor, inténtelo nuevamente.")
+			// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+			fmt.Scanln()
+			continue
+		}
+
+		if opcion != 1 && opcion != 2 {
+			fmt.Println("Opción no válida. Por favor, ingrese 1 o 2.")
+			continue
+		}
+
+		break
 	}
 
-	if filepath.Ext(filePath) != ".txt" {
-		fmt.Println("El archivo seleccionado no tiene la extensión .txt. Por favor, seleccione un archivo válido.")
-		return
-	}
+	var processes []Process
 
-	processes, err := ReadProcessesFromFile(filePath)
-	if err != nil {
-		fmt.Println("Error:", err)
+	switch opcion {
+	case 1:
+		processes = ingresarProcesosManualmente()
+	case 2:
+		fmt.Println("Seleccione un archivo con procesos para iniciar la simulación")
+		filePath, err := dialog.File().Load()
+		if err != nil {
+			fmt.Println("Error al abrir el explorador de archivos:", err)
+			return
+		}
+
+		if filepath.Ext(filePath) != ".txt" {
+			fmt.Println("El archivo seleccionado no tiene la extensión .txt. Por favor, seleccione un archivo válido.")
+			return
+		}
+
+		processes, err = ReadProcessesFromFile(filePath)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+	default:
+		fmt.Println("Opción no válida. Saliendo del programa.")
 		return
 	}
 	clearScreen()
