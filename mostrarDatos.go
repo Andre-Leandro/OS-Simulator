@@ -178,6 +178,46 @@ func NewModelShowReadyQueue(colaListos []Process) Model {
 	}
 
 }
+func NewModelShowNewQueue(colaNuevos []Process) Model {
+	// Crear columnas con estilo base
+	columns := []table.Column{
+		table.NewColumn(columnKeyPid, "PID", 9).WithStyle(styleBase),
+		table.NewColumn(columnKeyArrivalTime, "Tiempo de Arribo", 21).WithStyle(styleBase),
+		table.NewColumn(columnKeySize, " Tamaño (Kb)", 25).WithStyle(styleBase),
+		table.NewColumn(columnKeyTime, "Tiempo", 20).WithStyle(styleBase),
+	}
+
+	// Crear filas con datos de todos los procesos
+	var allRows []table.Row
+
+	if len(colaNuevos) == 0 {
+		row := table.NewRow(table.RowData{
+			columnKeyPid:         "-",
+			columnKeyArrivalTime: "-",
+			columnKeySize:        "-",
+			columnKeyTime:        "-",
+		})
+		allRows = append(allRows, row)
+	} else {
+		for i, _ := range colaNuevos {
+
+			row := table.NewRow(table.RowData{
+				columnKeyPid:         colaNuevos[i].pid,
+				columnKeyArrivalTime: colaNuevos[i].arrivalTime,
+				columnKeySize:        colaNuevos[i].size,
+				columnKeyTime:        colaNuevos[i].time,
+			})
+			allRows = append(allRows, row)
+
+		}
+	}
+	return Model{
+		tabla: table.New(columns).
+			WithRows(allRows).
+			BorderRounded(),
+	}
+
+}
 
 /* func NewModelAverage(averageTurnaroundTime float64, averageWaitTime float64) Model {
 	// Crear columnas sin título
@@ -253,6 +293,20 @@ func mostrarColaListos(colaListos []Process) {
 	}()
 
 	if err := j.Start(); err != nil {
+		log.Fatal(err)
+	}
+
+}
+
+func mostrarColaNuevos(colaNuevos []Process) {
+	y := tea.NewProgram(NewModelShowNewQueue(colaNuevos))
+
+	go func() {
+		time.Sleep(0)
+		y.Send(tea.KeyMsg{Type: tea.KeyCtrlC}) // Envía un mensaje de tecla para cerrar la aplicación
+	}()
+
+	if err := y.Start(); err != nil {
 		log.Fatal(err)
 	}
 

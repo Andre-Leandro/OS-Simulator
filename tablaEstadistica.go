@@ -71,7 +71,7 @@ func NewModelStats(completedProcesses []Process, allProcesses []Process) Model {
 
 	return Model{
 		tabla: table.New(columns).
-			WithRows(allRows).
+			WithRows(allRows).ThenSortByDesc(columnKeyTurnaroundTime).
 			BorderRounded(),
 	}
 }

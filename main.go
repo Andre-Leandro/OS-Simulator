@@ -81,6 +81,9 @@ func (os *OS) addReady(l *[]Process) {
 
 		if copy[index].arrivalTime <= os.time {
 			os.queue = append(os.queue, copy[index])
+			if os.queue[len(os.queue)-1].turnaroundTime == -1 {
+				os.queue[len(os.queue)-1].turnaroundTime = os.time
+			}
 
 			if len(*l) > 0 {
 				if len(*l) == 1 {
@@ -436,11 +439,15 @@ func main() {
 				fmt.Print("\n")
 				mostrarColaListos(linux.queue)
 				fmt.Print("\n")
+				fmt.Print("                                 COLA DE NUEVOS")
+				fmt.Print("\n")
+				mostrarColaNuevos(cola)
+				fmt.Print("\n")
 
 				//fmt.Print("* Esta es la cola de listos: ")
 				//	mostrarColas(linux.queue)
-				fmt.Print("• Esta es la cola de  procesos NUEVOS: ")
-				mostrarColas(cola)
+				/* 				fmt.Print("• Esta es la cola de  procesos NUEVOS: ")
+				   				mostrarColas(cola) */
 				fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
 				mostrarColas(linux.completedProcesses)
 
