@@ -1,15 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"math"
-	"os"
-	"os/exec"
 	"path/filepath"
-	"runtime"
-	"strconv"
-	"strings"
 
 	"github.com/sqweek/dialog"
 )
@@ -217,65 +211,7 @@ func (os *OS) initialize(m Memory) {
 	os.memory = m
 }
 
-func ReadProcessesFromFile(filename string, pidMap map[int]bool) ([]Process, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-	processes := []Process{}
-	scanner := bufio.NewScanner(file)
-	if scanner.Scan() {
-	}
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		values := strings.Fields(line)
-		if len(values) != 4 {
-			return nil, fmt.Errorf("Formato de entrada invalido: %s", line)
-		}
-		pid, err := strconv.Atoi(values[0])
-		if err != nil {
-			return nil, err
-		}
-		if isPIDInUse(pid, pidMap) {
-			return nil, fmt.Errorf("Error: El PID %d se repite más de una vez. Por favor, ingrese PIDs únicos.", pid)
-		} else {
-			pidMap[pid] = true
-		}
-		size, err := strconv.Atoi(values[1])
-		if size <= 0 {
-			return nil, fmt.Errorf("Error: El tamaño de los procesos debe ser mayor a 0 y menor a 250 kB.")
-		}
-		if err != nil {
-			return nil, err
-		}
-		arrivalTime, err := strconv.Atoi(values[2])
-		if arrivalTime < 0 {
-			return nil, fmt.Errorf("Error: El tiempo de arribo de los procesos debe ser mayor a 0")
-		}
-		if err != nil {
-			return nil, err
-		}
-		time, err := strconv.Atoi(values[3])
-		if time <= 0 {
-			return nil, fmt.Errorf("Error: El tiempo de irrupción de los procesos debe ser mayor a 0")
-		}
-		if err != nil {
-			return nil, err
-		}
-		turnaroundTime := -1
-		process := Process{pid, size, arrivalTime, turnaroundTime, time, false}
-		processes = append(processes, process)
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-	return processes, nil
-}
-
-func quicksort2(processes []Process) []Process {
+func quicksort(processes []Process) []Process {
 	if len(processes) <= 1 {
 		return processes
 	}
@@ -301,143 +237,7 @@ func quicksort2(processes []Process) []Process {
 			}
 		}
 	}
-	return append(append(quicksort2(less), equal...), quicksort2(greater)...)
-}
-
-func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, []Process) {
-	var filteredProcesses []Process
-	var deleted []Process
-
-	for _, p := range processes {
-		if p.size <= sizeThreshold {
-			filteredProcesses = append(filteredProcesses, p)
-		} else {
-			deleted = append(deleted, p)
-		}
-	}
-
-	return filteredProcesses, deleted
-}
-
-func mostrarColas(processes []Process) {
-	if len(processes) == 0 {
-		fmt.Println("-")
-		fmt.Println("\n")
-		return
-	}
-
-	for i, p := range processes {
-		if i == 0 {
-			fmt.Print(p.pid)
-		} else {
-			fmt.Print(", ", p.pid)
-		}
-	}
-	fmt.Println("\n")
-}
-
-func clearScreen() {
-	switch runtime.GOOS {
-	case "linux", "darwin": // para Linux y macOS
-		cmd := exec.Command("clear")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	case "windows": // para Windows
-		cmd := exec.Command("cmd", "/c", "cls")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
-	default:
-		fmt.Println("No se pudo determinar el sistema operativo para realizar el clear screen.")
-	}
-}
-
-func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
-	var procesos []Process
-
-	for {
-		var cantidadProcesos int
-		for {
-			fmt.Print("• Ingrese la cantidad de procesos: ")
-			_, err := fmt.Scanln(&cantidadProcesos)
-
-			if err != nil || cantidadProcesos <= 0 {
-				fmt.Println("Error al leer la cantidad de procesos. Por favor, ingrese un número entero positivo.")
-				// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-				continue
-			} else {
-				break
-			}
-
-		}
-
-		for i := 0; i < cantidadProcesos; i++ {
-			var pid, size, arrivalTime, time int
-
-			for {
-				fmt.Printf("• Ingrese el PID para el proceso %d: ", i+1)
-				_, err := fmt.Scanln(&pid)
-				if err != nil || pid < 0 {
-					fmt.Println("Error al leer el PID. Por favor, ingrese un número entero positivo.")
-					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
-					continue
-				}
-				if !isPIDInUse(pid, pidMap) {
-					pidMap[pid] = true
-					break
-				} else {
-					fmt.Println("Error: El PID ya está en uso. Por favor, ingrese un PID único.")
-					continue
-				}
-			}
-			for {
-				fmt.Printf("• Ingrese el TAMAÑO (kB) para el proceso %d: ", i+1)
-				_, err := fmt.Scanln(&size)
-				if size > 250 {
-					fmt.Println("El tamaño de los procesos no puede se superior a los 250 kB.")
-					continue
-				}
-				if err != nil || size <= 0 {
-					fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
-					continue
-				} else {
-					break
-				}
-			}
-			for {
-				fmt.Printf("• Ingrese el TIEMPO DE ARRIBO para el proceso %d: ", i+1)
-				_, err := fmt.Scanln(&arrivalTime)
-				if err != nil || arrivalTime < 0 {
-					fmt.Println("Error al leer el tiempo de arribo. Por favor, ingrese un número entero mayor o igual a 0.")
-					continue
-				} else {
-					break
-				}
-			}
-			for {
-				fmt.Printf("• Ingrese el TIEMPO DE IRRUPCIÓN para el proceso %d: ", i+1)
-				_, err := fmt.Scanln(&time)
-
-				if err != nil || time <= 0 {
-					fmt.Println("Error al leer el tiempo de irrupción. Por favor, ingrese un número entero positivo.")
-					continue
-				} else {
-					break
-				}
-			}
-
-			proceso := Process{pid, size, arrivalTime, -1, time, false}
-			procesos = append(procesos, proceso)
-		}
-
-		break
-	}
-
-	return procesos
-}
-
-func isPIDInUse(pid int, pidMap map[int]bool) bool {
-	_, exists := pidMap[pid]
-	return exists
+	return append(append(quicksort(less), equal...), quicksort(greater)...)
 }
 
 func main() {
@@ -523,13 +323,14 @@ func main() {
 	}
 	(&linux).initialize(memoria)
 	cola = append(cola, processes...)
-	cola = quicksort2(cola)
+	cola = quicksort(cola)
 	cola, del = filterProcessesBySize(cola, biggestPartition)
 	var input string
-	fmt.Println("Inicio del Sistema Operativo - Presione ENTER para continuar")
+	fmt.Println("Inicio del Sistema Operativo")
 	fmt.Print("\n")
 	fmt.Print("• Estos son los procesos ELIMINADOS por exceder el tamaño de memoria: ")
-	mostrarColas(del)
+	showQueue(del)
+	fmt.Print("Presione ENTER para continuar ")
 
 	for {
 		fmt.Scanln(&input)
@@ -541,7 +342,7 @@ func main() {
 					linux.addReady(&cola)
 				}
 				if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
-					fmt.Println("Se termino de procesar todo - Fin de la Simulación")
+					fmt.Println(" Se termino de procesar todo - Fin de la Simulación")
 					break
 				}
 				if linux.queue[0].loaded == false {
@@ -577,7 +378,7 @@ func main() {
 			}
 
 			if !linux.processor.process.isEmpty() {
-				fmt.Println("\n", "---------------------------------------- TIEMPO: ", linux.time, " ----------------------------------------", "\n")
+				fmt.Println("\n", "---------------------------------------- TIEMPO: ", linux.time, " ---------------------------------------", "\n")
 				mostrarProcesador(linux.processor.process)
 				fmt.Print("\n")
 				fmt.Print("                                             MEMORIA")
@@ -599,10 +400,10 @@ func main() {
 				//	mostrarColas(linux.queue)
 				/* 				fmt.Print("• Esta es la cola de  procesos NUEVOS: ")
 				   				mostrarColas(cola) */
-				fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
-				mostrarColas(linux.completedProcesses)
+				fmt.Print(" • Esta es la cola de procesos FINALIZADOS: ")
+				showQueue(linux.completedProcesses)
 
-				fmt.Println("---------------------------------------------------------------------------------------------")
+				fmt.Println(" ---------------------------------------------------------------------------------------------")
 			}
 
 		} else {
@@ -611,18 +412,4 @@ func main() {
 	}
 	fmt.Println("\n", "                     CUADRO ESTADÍSTICO")
 	arrancar(linux.completedProcesses, processes)
-}
-
-func printLambda() {
-	lambda := `
-	 _                     _         _       
-	| |                   | |       | |      
-	| |     __ _ _ __ ___ | |__   __| | __ _ 
-	| |    / _' | '_ ' _ \|  _ \ / _  |/ _  |
-	| |___| (_| | | | | | | |_) | (_| | (_| |
-	|______\__,_|_| |_| |_|_.__/ \__,_|\__,_|
-											 
-																																								  
-	`
-	fmt.Println(lambda)
 }
