@@ -397,7 +397,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				}
 			}
 			for {
-				fmt.Printf("• Ingrese el TIEMPO ARRIBO para el proceso %d: ", i+1)
+				fmt.Printf("• Ingrese el TIEMPO DE ARRIBO para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&arrivalTime)
 				if err != nil || arrivalTime < 0 {
 					fmt.Println("Error al leer el tiempo de llegada. Por favor, ingrese un número entero mayor o igual a 0.")
@@ -408,7 +408,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				}
 			}
 			for {
-				fmt.Printf("• Ingrese el TIEMPO IRRUPCIÓN para el proceso %d: ", i+1)
+				fmt.Printf("• Ingrese el TIEMPO DE IRRUPCIÓN para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&time)
 
 				if err != nil || time <= 0 {
