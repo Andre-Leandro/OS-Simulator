@@ -194,7 +194,7 @@ func (p *Process) timeOut(quantum int, queue *[]Process, os *OS, cola *[]Process
 		os.addReady(cola)
 		p.time = 0
 		p.turnaroundTime = os.time - p.turnaroundTime
-		fmt.Println("\n", "Termino el proceso:", p.pid, "en el instante", os.time, "\n")
+		fmt.Println("\n", "Termino el proceso:", p.pid, "en el instante", os.time)
 		os.completedProcesses = append(os.completedProcesses, *p)
 
 		for index := range os.memory.partitions {
@@ -314,7 +314,7 @@ func filterProcessesBySize(processes []Process, sizeThreshold int) ([]Process, [
 func mostrarColas(processes []Process) {
 	if len(processes) == 0 {
 		fmt.Println("-")
-		fmt.Println("\n")
+		fmt.Println("")
 		return
 	}
 
@@ -325,7 +325,7 @@ func mostrarColas(processes []Process) {
 			fmt.Print(", ", p.pid)
 		}
 	}
-	fmt.Println("\n")
+	fmt.Println("")
 }
 
 func clearScreen() {
@@ -566,12 +566,12 @@ func main() {
 			}
 
 			if len(linux.queue) == 0 && len(cola) == 0 && linux.processor.process.time <= 0 { //ver por que no funciona con el igual
-				fmt.Println("\n", "Se termino de procesar todo - Fin de la Simulacion", "\n")
+				fmt.Println("\n", "Se termino de procesar todo - Fin de la Simulacion")
 				break
 			}
 
 			if !linux.processor.process.isEmpty() {
-				fmt.Println("\n", "---------------------------------------- TIEMPO: ", linux.time, " ----------------------------------------", "\n")
+				fmt.Println("\n", "---------------------------------------- TIEMPO: ", linux.time, " ----------------------------------------")
 				mostrarProcesador(linux.processor.process)
 				fmt.Print("\n")
 				fmt.Print("                                             MEMORIA")
