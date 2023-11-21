@@ -244,7 +244,7 @@ func ReadProcessesFromFile(filename string, pidMap map[int]bool) ([]Process, err
 			pidMap[pid] = true
 		}
 		size, err := strconv.Atoi(values[1])
-		if size > 250 || size <= 0 {
+		if size <= 0 {
 			return nil, fmt.Errorf("Error: El tamaño de los procesos debe ser mayor a 0 y menor a 250 kB.")
 		}
 		if err != nil {
@@ -259,7 +259,7 @@ func ReadProcessesFromFile(filename string, pidMap map[int]bool) ([]Process, err
 		}
 		time, err := strconv.Atoi(values[3])
 		if time <= 0 {
-			return nil, fmt.Errorf("Error: El tiempo de irrupción de los procesos debe ser mayor o igual a 0")
+			return nil, fmt.Errorf("Error: El tiempo de irrupción de los procesos debe ser mayor a 0")
 		}
 		if err != nil {
 			return nil, err

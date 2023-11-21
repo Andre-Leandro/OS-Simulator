@@ -1,6 +1,6 @@
 pid - size - arrivalTime - time
  1     30        6          3 
- 2     40        6          7
+ 2     40        6          0
  3    150        6          10
  4     50        6          6
  5     70        6          9
