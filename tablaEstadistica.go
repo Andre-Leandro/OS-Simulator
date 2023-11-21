@@ -36,7 +36,7 @@ var averageTurnaroundTime, averageWaitTime float64
 func NewModelStats(completedProcesses []Process, allProcesses []Process) Model {
 	// Crear columnas con estilo base
 	columns := []table.Column{
-		table.NewColumn(columnKeyPid, "PID", 5).WithStyle(styleBase),
+		table.NewColumn(columnKeyPid, "PID", 15).WithStyle(styleBase),
 		table.NewColumn(columnKeyTurnaroundTime, "Tiempo de Retorno", 20).WithStyle(styleBase),
 		table.NewColumn(columnKeyWaitTime, "Tiempo de espera", 20).WithStyle(styleBase),
 	}
@@ -79,8 +79,8 @@ func NewModelStats(completedProcesses []Process, allProcesses []Process) Model {
 func NewModelAverage(averageTurnaroundTime float64, averageWaitTime float64) Model {
 	// Crear columnas sin título
 	columns := []table.Column{
-		table.NewColumn(columnKeyAverageName, "Promedio", 26).WithStyle(styleBase),
-		table.NewColumn(columnKeyAverageValue, "Valor", 20).WithStyle(styleBase),
+		table.NewColumn(columnKeyAverageName, "Promedio", 28).WithStyle(styleBase),
+		table.NewColumn(columnKeyAverageValue, "Valor", 28).WithStyle(styleBase),
 	}
 
 	// Crear filas con datos de promedio

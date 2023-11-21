@@ -349,7 +349,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 	for {
 		var cantidadProcesos int
 		for {
-			fmt.Print("Ingrese la cantidad de procesos: ")
+			fmt.Print("• Ingrese la cantidad de procesos: ")
 			_, err := fmt.Scanln(&cantidadProcesos)
 
 			if err != nil || cantidadProcesos <= 0 {
@@ -366,15 +366,13 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 			var pid, size, arrivalTime, time int
 
 			for {
-				fmt.Printf("Ingrese PID para el proceso %d: ", i+1)
+				fmt.Printf("• Ingrese el PID para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&pid)
-
 				if err != nil || pid < 0 {
-					fmt.Println("Error al leer el PID. Por favor, ingrese un número entero.")
+					fmt.Println("Error al leer el PID. Por favor, ingrese un número entero positivo.")
 					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
 					continue
 				}
-
 				if !isPIDInUse(pid, pidMap) {
 					pidMap[pid] = true
 					break
@@ -383,16 +381,13 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 					continue
 				}
 			}
-
 			for {
-				fmt.Printf("Ingrese tamaño (Kb) para el proceso %d: ", i+1)
+				fmt.Printf("• Ingrese el TAMAÑO (Kb) para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&size)
-
 				if size > 250 {
 					fmt.Println("El tamaño de los procesos no puede se superior a los 250 Kb.")
 					continue
 				}
-
 				if err != nil || size <= 0 {
 					fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
 					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
@@ -401,11 +396,9 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 					break
 				}
 			}
-
 			for {
-				fmt.Printf("Ingrese tiempo de llegada para el proceso %d: ", i+1)
+				fmt.Printf("• Ingrese el TIEMPO ARRIBO para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&arrivalTime)
-
 				if err != nil || arrivalTime < 0 {
 					fmt.Println("Error al leer el tiempo de llegada. Por favor, ingrese un número entero mayor o igual a 0.")
 					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
@@ -414,9 +407,8 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 					break
 				}
 			}
-
 			for {
-				fmt.Printf("Ingrese tiempo de ejecución para el proceso %d: ", i+1)
+				fmt.Printf("• Ingrese el TIEMPO IRRUPCIÓN para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&time)
 
 				if err != nil || time <= 0 {
@@ -454,8 +446,8 @@ func main() {
 	for {
 		pidMap = make(map[int]bool)
 		fmt.Println("Seleccione una opción:")
-		fmt.Println("1. Ingresar procesos manualmente")
-		fmt.Println("2. Cargar procesos desde un archivo")
+		fmt.Println("1. Ingresar procesos manualmente.")
+		fmt.Println("2. Cargar procesos desde un archivo.")
 
 		restart = false
 
@@ -481,7 +473,7 @@ func main() {
 		case 1:
 			processes = ingresarProcesosManualmente(pidMap)
 		case 2:
-			fmt.Println("Seleccione un archivo con procesos para iniciar la simulación")
+			fmt.Println("Seleccione un archivo con procesos para iniciar la simulación.")
 			filePath, err := dialog.File().Load()
 			if err != nil {
 				fmt.Println("Error al abrir el explorador de archivos:", err)
@@ -501,7 +493,7 @@ func main() {
 				break
 			}
 		default:
-			fmt.Println("Opción no válida. Saliendo del programa.")
+			fmt.Println("Opción no válida. Saliendo del simulador.")
 			return
 		}
 
@@ -579,20 +571,20 @@ func main() {
 			}
 
 			if !linux.processor.process.isEmpty() {
-				fmt.Println("\n", "---------------------------------- TIEMPO: ", linux.time, " ----------------------------------", "\n")
+				fmt.Println("\n", "---------------------------------------- TIEMPO: ", linux.time, " ----------------------------------------", "\n")
 				mostrarProcesador(linux.processor.process)
 				fmt.Print("\n")
-				fmt.Print("                                     MEMORIA")
+				fmt.Print("                                             MEMORIA")
 				// mostrarDatos2("MEMORIA")
 				fmt.Print("\n")
 				mostrarDatos(linux.memory, linux.processor.process)
 				fmt.Print("\n")
 				// mostrarDatos2("COLA DE LISTOS")
-				fmt.Print("                                 COLA DE LISTOS")
+				fmt.Print("                                        COLA DE LISTOS")
 				fmt.Print("\n")
 				mostrarColaListos(linux.queue)
 				fmt.Print("\n")
-				fmt.Print("                                 COLA DE NUEVOS")
+				fmt.Print("                                        COLA DE NUEVOS")
 				fmt.Print("\n")
 				mostrarColaNuevos(cola)
 				fmt.Print("\n")
@@ -604,13 +596,13 @@ func main() {
 				fmt.Print("• Esta es la cola de procesos FINALIZADOS: ")
 				mostrarColas(linux.completedProcesses)
 
-				fmt.Println("----------------------------------------------------------------------------------")
+				fmt.Println("---------------------------------------------------------------------------------------------")
 			}
 
 		} else {
 			break
 		}
 	}
-	fmt.Println("\n", "                 CUADRO ESTADÍSTICO")
+	fmt.Println("\n", "                     CUADRO ESTADÍSTICO")
 	arrancar(linux.completedProcesses, processes)
 }
