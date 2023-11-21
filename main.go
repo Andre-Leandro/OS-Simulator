@@ -398,7 +398,6 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				}
 				if err != nil || size <= 0 {
 					fmt.Println("Error al leer el tamaño. Por favor, ingrese un número entero positivo.")
-					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
 					continue
 				} else {
 					break
@@ -408,8 +407,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				fmt.Printf("• Ingrese el TIEMPO DE ARRIBO para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&arrivalTime)
 				if err != nil || arrivalTime < 0 {
-					fmt.Println("Error al leer el tiempo de llegada. Por favor, ingrese un número entero mayor o igual a 0.")
-					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+					fmt.Println("Error al leer el tiempo de arribo. Por favor, ingrese un número entero mayor o igual a 0.")
 					continue
 				} else {
 					break
@@ -420,8 +418,7 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				_, err := fmt.Scanln(&time)
 
 				if err != nil || time <= 0 {
-					fmt.Println("Error al leer el tiempo de ejecución. Por favor, ingrese un número entero positivo.")
-					// Limpiar el búfer del teclado para evitar problemas con futuras lecturas
+					fmt.Println("Error al leer el tiempo de irrupción. Por favor, ingrese un número entero positivo.")
 					continue
 				} else {
 					break
