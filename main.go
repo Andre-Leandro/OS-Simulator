@@ -441,6 +441,7 @@ func isPIDInUse(pid int, pidMap map[int]bool) bool {
 }
 
 func main() {
+	printLambda()
 	var pidMap = make(map[int]bool)
 	var opcion int
 	var err error
@@ -610,4 +611,18 @@ func main() {
 	}
 	fmt.Println("\n", "                     CUADRO ESTADÍSTICO")
 	arrancar(linux.completedProcesses, processes)
+}
+
+func printLambda() {
+	lambda := `
+	 _                     _         _       
+	| |                   | |       | |      
+	| |     __ _ _ __ ___ | |__   __| | __ _ 
+	| |    / _' | '_ ' _ \|  _ \ / _  |/ _  |
+	| |___| (_| | | | | | | |_) | (_| | (_| |
+	|______\__,_|_| |_| |_|_.__/ \__,_|\__,_|
+											 
+																																								  
+	`
+	fmt.Println(lambda)
 }
