@@ -61,11 +61,11 @@ const biggestPartition = 250
 func swapOut(i int) {
 	switch i {
 	case 1:
-		fmt.Println("Se liberó la partición GRANDE (250 Kb)")
+		fmt.Println("Se liberó la partición GRANDE (250 kB)")
 	case 2:
-		fmt.Println("Se liberó la partición MEDIANA (120 Kb)")
+		fmt.Println("Se liberó la partición MEDIANA (120 kB)")
 	case 3:
-		fmt.Println("Se liberó la partición PEQUEÑA (60 Kb)")
+		fmt.Println("Se liberó la partición PEQUEÑA (60 kB)")
 	default:
 		fmt.Println("Partición no reconocida")
 	}
@@ -390,10 +390,10 @@ func ingresarProcesosManualmente(pidMap map[int]bool) []Process {
 				}
 			}
 			for {
-				fmt.Printf("• Ingrese el TAMAÑO (Kb) para el proceso %d: ", i+1)
+				fmt.Printf("• Ingrese el TAMAÑO (kB) para el proceso %d: ", i+1)
 				_, err := fmt.Scanln(&size)
 				if size > 250 {
-					fmt.Println("El tamaño de los procesos no puede se superior a los 250 Kb.")
+					fmt.Println("El tamaño de los procesos no puede se superior a los 250 kB.")
 					continue
 				}
 				if err != nil || size <= 0 {
